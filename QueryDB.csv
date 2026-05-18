@@ -1,0 +1,23 @@
+Heading,Query,ID
+"Add tester","insert into aml_internal.tbl_crft_team_dtls (TEAM_ID, EMP_CODE, CATEGORY, JOB_DESC, STATUS_ID)
+values (6, 380421, '1', '2', '1');--1row
+
+Insert into AML_INTERNAL.TBL_CRFT_ROLE_DTL
+  (ROLE_DT_ID, ROLE_ID, EMPCODE, STATUS_ID)
+  (select SEQ_CRF_ROLE_DT_ID.NEXTVAL, t.menu_id, 380421, 1
+     from AML_INTERNAL.TBL_CRFT_SUB_MENU_MST t
+    where t.menu_id in (12,26)
+      and t.menu_id not in (select t.role_id
+                              from AML_INTERNAL.TBL_CRFT_ROLE_DTL T
+                             where t.empcode = 380421)); --- For Add menu to Testers",1779083199508
+"mm","insert into aml_internal.tbl_crft_team_dtls (TEAM_ID, EMP_CODE, CATEGORY, JOB_DESC, STATUS_ID)
+values (6, 380421, '1', '2', '1');--1row
+
+Insert into AML_INTERNAL.TBL_CRFT_ROLE_DTL
+  (ROLE_DT_ID, ROLE_ID, EMPCODE, STATUS_ID)
+  (select SEQ_CRF_ROLE_DT_ID.NEXTVAL, t.menu_id, 380421, 1
+     from AML_INTERNAL.TBL_CRFT_SUB_MENU_MST t
+    where t.menu_id in (12,26)
+      and t.menu_id not in (select t.role_id
+                              from AML_INTERNAL.TBL_CRFT_ROLE_DTL T
+                             where t.empcode = 380421)); --- For Add menu to Testers",1779082825568
