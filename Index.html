@@ -39,7 +39,7 @@
         }
 
         .main-content {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
@@ -156,21 +156,27 @@
             border-color: #475569;
         }
 
-        /* Grid Layout */
+        /* Grid Layout - Optimized for 5 columns on large screens */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.25rem;
+        }
+
+        @media (min-width: 1400px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
         }
 
         .query-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 1.5rem;
+            padding: 1.25rem;
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
+            gap: 1rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -202,11 +208,11 @@
         .card-header {
             display: flex;
             align-items: center;
-            gap: 0.85rem;
+            gap: 0.75rem;
         }
 
         .card-icon-container {
-            padding: 0.6rem;
+            padding: 0.5rem;
             background: rgba(99, 102, 241, 0.15);
             color: #818cf8;
             border-radius: 10px;
@@ -216,7 +222,7 @@
         }
 
         .card-title {
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-main);
             white-space: nowrap;
@@ -228,10 +234,10 @@
         .query-preview {
             background: var(--code-bg);
             color: var(--code-text);
-            padding: 1rem;
+            padding: 0.85rem;
             border-radius: 12px;
             font-family: 'Fira Code', Consolas, Monaco, monospace;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             white-space: pre-wrap;
             word-break: break-all;
             height: 110px; 
@@ -258,14 +264,14 @@
         .card-footer {
             display: flex;
             justify-content: flex-end;
-            gap: 0.6rem;
+            gap: 0.5rem;
             border-top: 1px solid var(--border);
-            padding-top: 1rem;
+            padding-top: 0.85rem;
             margin-top: auto;
         }
 
         .card-footer .btn-icon {
-            padding: 0.55rem;
+            padding: 0.5rem;
             border-radius: 8px;
         }
 
@@ -407,11 +413,20 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .spinning { animation: spin 1s linear infinite; }
 
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
         @media (max-width: 640px) {
             body { padding: 1rem; }
             .top-bar { flex-direction: column; align-items: stretch; gap: 1rem; padding: 1rem; }
             .search-wrapper { max-width: 100%; }
             .actions-wrapper { justify-content: flex-end; }
+            .dashboard-grid { grid-template-columns: 1fr; }
             .toast { left: 1rem; right: 1rem; bottom: 1rem; }
         }
     </style>
@@ -562,14 +577,14 @@
         const branch = localStorage.getItem('gh_branch') || 'main';
 
         if (!token || !owner || !repo) {
-            showStatusToast("settings", "Please configure GitHub Settings (Gear Icon) to allow auto-saving.", "#f59e0b", false, 6000);
+            showStatusToast("settings", "Configure GitHub Settings to enable cloud auto-saving.", "#f59e0b", false, 6000);
             return false;
         }
 
-        showStatusToast("loader", "Committing updates directly to GitHub repo...", "#6366f1", true);
+        // Notification showing background processing has started
+        showStatusToast("loader", "Recent change accepted! Committing progress to GitHub background...", "#6366f1", true);
 
         try {
-            // 1. Get current SHA hash identifier of the existing file (Required by GitHub API to update files)
             const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${csvFileName}?ref=${branch}`;
             const getRes = await fetch(fileUrl, {
                 headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
@@ -581,7 +596,6 @@
                 sha = fileData.sha;
             }
 
-            // 2. Generate clean CSV string mapping structure
             let csvContent = "Heading,Query,ID\r\n";
             queries.forEach(q => {
                 let headingEscaped = '"' + q.heading.replace(/"/g, '""') + '"';
@@ -589,7 +603,6 @@
                 csvContent += headingEscaped + "," + textEscaped + "," + q.id + "\r\n";
             });
 
-            // 3. Send PUT request payload to push modification directly back to your repository branch
             const putRes = await fetch(fileUrl, {
                 method: 'PUT',
                 headers: {
@@ -599,18 +612,18 @@
                 },
                 body: JSON.stringify({
                     message: "Dashboard automatic database updates [skip ci]",
-                    content: btoa(unescape(encodeURIComponent(csvContent))), // Base64 handling for special characters
+                    content: btoa(unescape(encodeURIComponent(csvContent))), 
                     sha: sha || undefined,
                     branch: branch
                 })
             });
 
-            if (!putRes.ok) throw new Error("GitHub rejected the push write action");
+            if (!putRes.ok) throw new Error("GitHub push failed");
 
-            showStatusToast("check-circle", "Changes committed and saved to GitHub successfully!", "#10b981", false, 3000);
+            showStatusToast("check-circle", "GitHub cloud repository successfully updated!", "#10b981", false, 3000);
             return true;
         } catch (err) {
-            showStatusToast("alert-circle", "Sync failed! Check your token settings or repository permissions.", "#f43f5e", false, 5000);
+            showStatusToast("alert-circle", "Background sync failed! Check token or file permissions.", "#f43f5e", false, 5000);
             return false;
         }
     }
@@ -626,6 +639,7 @@
 
         const originalQueries = [...queries];
 
+        // 1. Instant local state updates
         if (id) {
             queries = queries.map(q => q.id === parseInt(id) ? { ...q, heading, text } : q);
         } else {
@@ -634,12 +648,12 @@
         }
 
         closeModal('modalOverlay');
+        filterQueries(); // Renders change immediately on dashboard layout
         
+        // 2. Trigger asynchronous commit task behind scenes
         const success = await saveChangesToGitHub();
-        if (success) {
-            filterQueries(); 
-        } else {
-            queries = originalQueries; // Revert locally if push failed
+        if (!success) {
+            queries = originalQueries; // Rolling back locally if write error triggers
             filterQueries();
         }
     }
@@ -647,12 +661,14 @@
     async function destroyQuery(id) {
         if (confirm("Delete this query permanently from your GitHub repository file?")) {
             const originalQueries = [...queries];
-            queries = queries.filter(q => q.id !== id);
             
+            // 1. Instantly clear locally
+            queries = queries.filter(q => q.id !== id);
+            filterQueries();
+            
+            // 2. Trigger asynchronous background removal
             const success = await saveChangesToGitHub();
-            if (success) {
-                filterQueries();
-            } else {
+            if (!success) {
                 queries = originalQueries;
                 filterQueries();
             }
@@ -679,7 +695,7 @@
         
         closeModal('settingsOverlay');
         showStatusToast("check-circle", "GitHub parameters updated!", "#10b981", false, 2500);
-        autoFetchCSV(); // Re-fetch testing authorization endpoints
+        autoFetchCSV(); 
     }
 
     /* ==========================================================================
