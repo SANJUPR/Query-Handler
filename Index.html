@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Query Vault Dashboard (Auto-Sync Powered)</title>
+    <title>Query Vault Dashboard</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
@@ -16,8 +16,6 @@
             --border: #e2e8f0;
             --code-bg: #1e1e2e;
             --code-text: #cdd6f4;
-            --success: #10b981;
-            --error: #ef4444;
         }
 
         * {
@@ -37,27 +35,6 @@
         .main-content {
             max-width: 1200px;
             margin: 0 auto;
-        }
-
-        /* Streamlined Status Bar */
-        .storage-panel {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .storage-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 0.9rem;
-            color: #1e40af;
-            font-weight: 500;
         }
 
         /* Top Bar Layout */
@@ -330,13 +307,13 @@
             right: 2rem;
             background: #0f172a;
             color: white;
-            padding: 0.65rem 1rem;
+            padding: 0.75rem 1.25rem;
             border-radius: 8px;
             font-size: 0.85rem;
             font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.65rem;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
             transform: translateY(100px);
             opacity: 0;
@@ -348,24 +325,14 @@
             transform: translateY(0);
             opacity: 1;
         }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spinning { animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
 
     <main class="main-content">
-        <!-- Automatic Link Status Panel -->
-        <div class="storage-panel">
-            <div class="storage-info">
-                <i data-lucide="loader" id="syncIcon" style="width:20px; height:20px; color:var(--primary); animation: spin 2s linear infinite;"></i>
-                <div>
-                    <span id="syncStatus" style="font-weight:700;">Fetching database...</span>
-                    <div style="font-size:0.75rem; color:#4b5563; font-weight:normal; margin-top:0.15rem;">
-                        Source Repository Location: <code style="background:#e2e8f0; padding:1px 4px; border-radius:4px;">./QueryDB.csv</code>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="top-bar">
             <div class="search-wrapper">
                 <i data-lucide="search" class="search-icon"></i>
@@ -408,20 +375,17 @@
         </div>
     </div>
 
-    <!-- Toast Prompt Instructions -->
+    <!-- Dynamic Alert Toast System -->
     <div id="toast" class="toast">
-        <i data-lucide="check-circle" id="toastIcon" style="width:16px;height:16px;color:#10b981;"></i>
-        <span id="toastMessage">Done!</span>
+        <span id="toastIconSlot"><i data-lucide="loader" class="spinning" style="width:16px;height:16px;color:#3b82f6;"></i></span>
+        <span id="toastMessage">Fetching database...</span>
     </div>
-
-    <!-- Spin animation for the loading icon -->
-    <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
 
 <script>
     let queries = [];
-    const csvFileName = "QueryDB.csv"; // Looks for this file in your same GitHub directory folder
+    const csvFileName = "QueryDB.csv"; 
 
-    // DOM Target Bindings
+    // DOM Bindings
     const dashboardGrid = document.getElementById('dashboardGrid');
     const modalOverlay = document.getElementById('modalOverlay');
     const queryForm = document.getElementById('queryForm');
@@ -433,51 +397,48 @@
     const searchBar = document.getElementById('searchBar');
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
-    const syncStatus = document.getElementById('syncStatus');
-    const syncIcon = document.getElementById('syncIcon');
+    const toastIconSlot = document.getElementById('toastIconSlot');
 
-    // System Startup: Fetch data directly from file on load
+    // Run completely automatically on page load
     window.addEventListener('DOMContentLoaded', () => {
         renderDashboard([]);
+        // Show initial loading popup state immediately
+        toast.classList.add('show');
         autoFetchCSV();
     });
 
     /* ==========================================================================
-       AUTOMATED BG FETCH STREAM PIPELINE
+       SILENT AUTO-FETCH STREAM PIPELINE
        ========================================================================== */
     async function autoFetchCSV() {
         try {
-            // Fetching relative to the location of index.html on GitHub
-            const response = await fetch(`./${csvFileName}?t=${Date.now()}`); // Added timestamp to bypass browser cache
+            const response = await fetch(`./${csvFileName}?t=${Date.now()}`); // Cache-busting timestamp
             
-            if (!response.ok) {
-                throw new Error("Missing File");
-            }
+            if (!response.ok) throw new Error("Missing File");
             
             const text = await response.text();
             queries = parseCSV(text);
             
-            // Adjust visual sync states on UI
-            syncStatus.innerText = `Auto-Fetched Sync Copy (${queries.length} items parsed)`;
-            syncStatus.style.color = "var(--success)";
-            syncIcon.setAttribute("data-lucide", "check-circle");
-            syncIcon.style.color = "var(--success)";
-            syncIcon.style.animation = "none";
+            // Switch loader icon to a success checkmark in the popup
+            toastIconSlot.innerHTML = `<i data-lucide="check-circle" style="width:16px;height:16px;color:#10b981;"></i>`;
+            toastMessage.innerText = `Synced! Parsed ${queries.length} queries.`;
             lucide.createIcons();
             
             filterQueries();
+            
+            // Hide the startup popup after 2.5 seconds
+            setTimeout(() => toast.classList.remove('show'), 2500);
         } catch (err) {
-            syncStatus.innerText = `Could not auto-fetch "${csvFileName}"`;
-            syncStatus.style.color = "var(--error)";
-            syncIcon.setAttribute("data-lucide", "alert-circle");
-            syncIcon.style.color = "var(--error)";
-            syncIcon.style.animation = "none";
+            // Switch loader icon to error icon if something fails
+            toastIconSlot.innerHTML = `<i data-lucide="alert-circle" style="width:16px;height:16px;color:#ef4444;"></i>`;
+            toastMessage.innerText = `Could not load "${csvFileName}" file.`;
             lucide.createIcons();
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
     }
 
     /* ==========================================================================
-       DASHBOARD OPERATIONS INTERACTION REVIEWS
+       DASHBOARD CONTROLLER ACTIONS
        ========================================================================== */
     function handleFormSubmit(e) {
         e.preventDefault();
@@ -494,21 +455,18 @@
 
         closeModal();
         filterQueries();
-        generateOutputInstructions("Query Data Modified!");
+        triggerDownloadSequence("Data Modified!");
     }
 
     function destroyQuery(id) {
-        if (confirm("Remove item from viewport preview?")) {
+        if (confirm("Remove item from dashboard lookups?")) {
             queries = queries.filter(q => q.id !== id);
             filterQueries();
-            generateOutputInstructions("Item deleted locally!");
+            triggerDownloadSequence("Item Deleted!");
         }
     }
 
-    // Displays updated strings inside the down-screen popup instruction
-    function generateOutputInstructions(headline) {
-        // Since browsers cannot directly commit modifications back to a git repo over standard HTTP, 
-        // we provide a direct download fallback to easily drop the replacement into your local folder.
+    function triggerDownloadSequence(headline) {
         let csvContent = "Heading,Query,ID\r\n";
         queries.forEach(q => {
             let headingEscaped = '"' + q.heading.replace(/"/g, '""') + '"';
@@ -524,11 +482,16 @@
         link.click();
         document.body.removeChild(link);
 
-        triggerToast(`${headline} Downloading fresh "${csvFileName}" to overwrite repository folder.`);
+        // Show updating action toast notifications
+        toastIconSlot.innerHTML = `<i data-lucide="check-circle" style="width:16px;height:16px;color:#10b981;"></i>`;
+        toastMessage.innerText = `${headline} Downloaded fresh Excel copy to replace local file.`;
+        lucide.createIcons();
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
     }
 
     /* ==========================================================================
-       DASHBOARD STRUCTURAL RENDERING UTILITIES
+       DASHBOARD COMPONENT RENDERING ENGINE
        ========================================================================== */
     function getContextIcon(title) {
         const text = title.toLowerCase();
@@ -560,7 +523,7 @@
             dashboardGrid.innerHTML = `
                 <div class="no-data">
                     <i data-lucide="folder-open" style="width:32px; height:32px; margin-bottom:0.75rem; color:var(--text-muted);"></i>
-                    <p>No queries mapped. Check if "${csvFileName}" is saved in the same GitHub repository location folder.</p>
+                    <p>No queries to show. Verify "${csvFileName}" is saved directly alongside this index file in your repo folder.</p>
                 </div>`;
             lucide.createIcons();
             return;
@@ -613,13 +576,13 @@
     }
 
     function copySnippet(val) {
-        navigator.clipboard.writeText(val).then(() => { triggerToast("Copied code to clipboard!"); });
-    }
-
-    function triggerToast(msg) {
-        toastMessage.innerText = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 4000);
+        navigator.clipboard.writeText(val).then(() => {
+            toastIconSlot.innerHTML = `<i data-lucide="copy" style="width:16px;height:16px;color:#10b981;"></i>`;
+            toastMessage.innerText = "Copied code to clipboard!";
+            lucide.createIcons();
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        });
     }
 
     function parseCSV(text) {
