@@ -31,7 +31,7 @@ Heading,Query,ID
       and t.menu_id not in (select t.role_id
                               from AML_INTERNAL.TBL_CRFT_ROLE_DTL T
                              where t.empcode = 338019)); --- For Add menu to ITC",1779088549199
-"Add Tester","insert into aml_internal.tbl_crft_team_dtls (TEAM_ID, EMP_CODE, CATEGORY, JOB_DESC, STATUS_ID)
+"Add Tester in CRFT","insert into aml_internal.tbl_crft_team_dtls (TEAM_ID, EMP_CODE, CATEGORY, JOB_DESC, STATUS_ID)
 values (6, 380421, '1', '2', '1');--1row
 
 Insert into AML_INTERNAL.TBL_CRFT_ROLE_DTL
