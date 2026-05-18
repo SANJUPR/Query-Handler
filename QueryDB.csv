@@ -1,4 +1,7 @@
 Heading,Query,ID
+"Employee Details","select * from aml_hrm.employee_master t where t.emp_code=317674;
+select * from aml_hrm.department_mst t where t.dep_id=49;
+select * from aml_hrm.department_major t where t.department_id=26;",1779088428384
 "CRF Details","select * from aml_internal.tbl_crft_mst t where t.crf_id=2057;
 select * from aml_internal.tbl_crft_dev_ta_dtls t where t.crf_id=2057;
 select t.*, t.rowid from aml_internal.TBL_CRFT_testing_TA_DTLS t where t.crf_id=2057;",1779088409841
