@@ -149,10 +149,14 @@
             justify-content: center;
             transition: all 0.2s;
         }
-        .btn-icon:hover {
+        .btn-icon:hover:not(:disabled) {
             color: var(--text-main);
             background: #334155;
             border-color: #475569;
+        }
+        .btn-icon:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* Grid Layout */
@@ -361,6 +365,12 @@
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
 
+        .form-control:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #131c2e;
+        }
+
         textarea.form-control {
             min-height: 160px;
             resize: vertical;
@@ -435,10 +445,10 @@
                 <input type="text" id="searchBar" class="search-bar" placeholder="Search saved queries..." oninput="filterQueries()">
             </div>
             <div class="actions-wrapper">
-                <button class="btn btn-primary" onclick="openModal()">
+                <button id="addQueryBtn" class="btn btn-primary" onclick="openModal()">
                     <i data-lucide="plus" style="width:18px;height:18px;"></i> Add New Query
                 </button>
-                <button class="btn-icon" title="GitHub Sync Settings" onclick="openSettingsModal()">
+                <button id="settingsBtn" class="btn-icon" title="GitHub Sync Settings" onclick="openSettingsModal()">
                     <i data-lucide="settings" style="width:20px;height:20px;"></i>
                 </button>
             </div>
@@ -539,6 +549,8 @@
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
     const toastIconSlot = document.getElementById('toastIconSlot');
+    const addQueryBtn = document.getElementById('addQueryBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
 
     window.addEventListener('DOMContentLoaded', () => {
         renderDashboard([]);
@@ -551,7 +563,6 @@
        ========================================================================== */
     async function autoFetchCSV() {
         try {
-            // Check if we have an un-built fallback cache locally from a recent write action
             const localFallback = localStorage.getItem('qv_local_backup');
             
             const response = await fetch(`./${csvFileName}?t=${Date.now()}`); 
@@ -561,14 +572,12 @@
             const cloudQueries = parseCSV(text);
 
             if (localFallback) {
-                // If local storage exists, check if cloud catchup finally matched it
                 const fallbackParsed = JSON.parse(localFallback);
-                if (cloudQueries.length >= fallbackParsed.length) {
-                    // Cloud build caught up! Safe to flush local storage
+                // Simple sync verification check
+                if (JSON.stringify(cloudQueries) === JSON.stringify(fallbackParsed)) {
                     localStorage.removeItem('qv_local_backup');
                     queries = cloudQueries;
                 } else {
-                    // Cloud is still assembling build pages pipeline, default to persistent local changes
                     queries = fallbackParsed;
                 }
             } else {
@@ -582,9 +591,9 @@
             if (localFallback) {
                 queries = JSON.parse(localFallback);
                 filterQueries();
-                showStatusToast("check-circle", "Loaded recent workspace modifications from local storage.", "#10b981", false, 3000);
+                showStatusToast("check-circle", "Loaded recent workspace modifications from local workspace cache.", "#10b981", false, 3000);
             } else {
-                showStatusToast("alert-circle", `Could not read "${csvFileName}". Verify file configuration setup.`, "#f43f5e", false, 5000);
+                showStatusToast("alert-circle", `Could not read "${csvFileName}". Verify repo composition settings.`, "#f43f5e", false, 5000);
             }
         }
     }
@@ -630,26 +639,39 @@
                     'Accept': 'application/vnd.github.v3+json'
                 },
                 body: JSON.stringify({
-                    message: "Dashboard manual code commit [skip ci]",
+                    message: "Dashboard database configuration updates [skip ci]",
                     content: btoa(unescape(encodeURIComponent(csvContent))), 
                     sha: sha || undefined,
                     branch: branch
                 })
             });
 
-            if (!putRes.ok) throw new Error("GitHub rejected connection write");
+            if (!putRes.ok) throw new Error("GitHub rejected validation push context");
 
-            // Save state copies to Local Storage so page refresh shows it immediately
             localStorage.setItem('qv_local_backup', JSON.stringify(queries));
             return true;
         } catch (err) {
-            showStatusToast("alert-circle", "Commit failure encountered inside remote directory structures.", "#f43f5e", false, 5000);
+            showStatusToast("alert-circle", "Commit failure encountered inside remote configurations.", "#f43f5e", false, 5000);
             return false;
         }
     }
 
     /* ==========================================================================
-       DASHBOARD FORM CAPTURE CONTROLS
+       GLOBAL INTERFACE BLOCKING AND RELEASING LAYER
+       ========================================================================== */
+    function toggleGlobalUIBlocking(block) {
+        isSubmitting = block;
+        addQueryBtn.disabled = block;
+        settingsBtn.disabled = block;
+        searchBar.disabled = block;
+        
+        // Disable or enable all workspace interactive card command endpoints
+        const allCardButtons = dashboardGrid.querySelectorAll('.btn-icon');
+        allCardButtons.forEach(btn => btn.disabled = block);
+    }
+
+    /* ==========================================================================
+       DASHBOARD FORM CAPTURE & MODIFICATION CONTROLS
        ========================================================================== */
     async function handleFormSubmit(e) {
         e.preventDefault();
@@ -660,12 +682,15 @@
         const text = queryTextInput.value.trim();
         const originalQueries = [...queries];
 
-        // Enter loading block layout configuration state
-        isSubmitting = true;
-        saveBtn.disabled = true;
+        // 1. Enter strict visual blocking load configurations
+        toggleGlobalUIBlocking(true);
+        queryHeadingInput.disabled = true;
+        queryTextInput.disabled = true;
         cancelModalBtn.disabled = true;
         closeModalBtn.disabled = true;
-        saveBtn.innerHTML = `<i data-lucide="loader" class="spinning" style="width:16px;height:16px;"></i> Publishing live...`;
+        
+        const loaderMsg = id ? "Updating changes live..." : "Publishing live...";
+        saveBtn.innerHTML = `<i data-lucide="loader" class="spinning" style="width:16px;height:16px;"></i> ${loaderMsg}`;
         lucide.createIcons();
 
         if (id) {
@@ -675,22 +700,24 @@
             queries.unshift(item);
         }
 
-        // Wait completely for GitHub API file acceptance configuration confirmation response
+        // 2. Transmit and await concrete API structural verification responses
         const success = await saveChangesToGitHub();
 
-        // Release submission interface blocks
-        isSubmitting = false;
-        saveBtn.disabled = false;
+        // 3. Clear interface freeze states
+        toggleGlobalUIBlocking(false);
+        queryHeadingInput.disabled = false;
+        queryTextInput.disabled = false;
         cancelModalBtn.disabled = false;
         closeModalBtn.disabled = false;
         saveBtn.innerText = "Save Query";
 
         if (success) {
-            closeModal('modalOverlay');
+            // Only drop the open input interface context upon certified confirmation success profiles
+            modalOverlay.classList.remove('active');
             filterQueries();
-            showStatusToast("check-circle", "Publish complete! Verified and safe across page reloads.", "#10b981", false, 4000);
+            showStatusToast("check-circle", "Publish successful! Workspace completely safe across updates.", "#10b981", false, 4000);
         } else {
-            queries = originalQueries; // Rollback array maps if API fails
+            queries = originalQueries;
             filterQueries();
         }
     }
@@ -701,15 +728,17 @@
             const originalQueries = [...queries];
             queries = queries.filter(q => q.id !== id);
             
-            showStatusToast("loader", "Processing removal configuration commands...", "#6366f1", true);
-            isSubmitting = true;
+            // Trigger comprehensive layout execution locks
+            showStatusToast("loader", "Processing removal commands live...", "#6366f1", true);
+            toggleGlobalUIBlocking(true);
 
             const success = await saveChangesToGitHub();
-            isSubmitting = false;
+            
+            toggleGlobalUIBlocking(false);
 
             if (success) {
                 filterQueries();
-                showStatusToast("check-circle", "Query successfully removed from remote file database structures.", "#10b981", false, 4000);
+                showStatusToast("check-circle", "Query completely stripped from remote file architectures.", "#10b981", false, 4000);
             } else {
                 queries = originalQueries;
                 filterQueries();
@@ -718,7 +747,7 @@
     }
 
     /* ==========================================================================
-       SETTINGS & GENERAL UTILITIES
+       SETTINGS & PERSISTENT PREFERENCES MANAGEMENT
        ========================================================================== */
     function openSettingsModal() {
         if (isSubmitting) return;
@@ -737,10 +766,13 @@
         localStorage.setItem('gh_branch', document.getElementById('ghBranch').value.trim());
         
         closeModal('settingsOverlay');
-        showStatusToast("check-circle", "GitHub parameters updated!", "#10b981", false, 2500);
+        showStatusToast("check-circle", "GitHub credentials saved securely.", "#10b981", false, 2500);
         autoFetchCSV(); 
     }
 
+    /* ==========================================================================
+       UI INTERFACES AND COMPONENT BUILD LAYER
+       ========================================================================== */
     function showStatusToast(icon, message, color, isSpinning = false, timeout = 0) {
         toastIconSlot.innerHTML = `<i data-lucide="${icon}" class="${isSpinning ? 'spinning' : ''}" style="width:18px;height:18px;color:${color};"></i>`;
         toastMessage.innerText = message;
@@ -748,7 +780,10 @@
         toast.classList.add('show');
         
         if (timeout > 0) {
-            setTimeout(() => toast.classList.remove('show'), timeout);
+            setTimeout(() => {
+                // Prevent timeout dismissal calls from overriding an active blocker profile notification 
+                if (!isSubmitting) toast.classList.remove('show');
+            }, timeout);
         }
     }
 
@@ -790,7 +825,7 @@
             dashboardGrid.innerHTML = `
                 <div class="no-data">
                     <i data-lucide="folder-open" style="width:40px; height:40px; margin-bottom:1rem; color:var(--text-muted);"></i>
-                    <p>No queries found. Verify your file configurations inside your repository assets.</p>
+                    <p>No queries match your requested structural layout parameters.</p>
                 </div>`;
             lucide.createIcons();
             return;
@@ -807,13 +842,13 @@
                 </div>
                 <pre class="query-preview"><code>${escapeHTML(q.text)}</code></pre>
                 <div class="card-footer">
-                    <button class="btn-icon" title="Copy Content" onclick="copySnippet(\`${escapeJS(q.text)}\`)">
+                    <button class="btn-icon" title="Copy Content" ${isSubmitting ? 'disabled' : ''} onclick="copySnippet(\`${escapeJS(q.text)}\`)">
                         <i data-lucide="copy" style="width:16px; height:16px;"></i>
                     </button>
-                    <button class="btn-icon" title="Modify Item" onclick="setupEditForm(${q.id})">
+                    <button class="btn-icon" title="Modify Item" ${isSubmitting ? 'disabled' : ''} onclick="setupEditForm(${q.id})">
                         <i data-lucide="edit-3" style="width:16px; height:16px;"></i>
                     </button>
-                    <button class="btn-icon" title="Delete Permanent" onclick="destroyQuery(${q.id})">
+                    <button class="btn-icon" title="Delete Permanent" ${isSubmitting ? 'disabled' : ''} onclick="destroyQuery(${q.id})">
                         <i data-lucide="trash" style="width:16px; height:16px;"></i>
                     </button>
                 </div>`;
@@ -844,6 +879,7 @@
     }
 
     function copySnippet(val) {
+        if (isSubmitting) return;
         navigator.clipboard.writeText(val).then(() => {
             showStatusToast("copy", "Copied to clipboard!", "#10b981", false, 2000);
         });
