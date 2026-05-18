@@ -7,17 +7,19 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --code-bg: #1e1e2e;
-            --code-text: #cdd6f4;
+            --bg-color: #0f172a;
+            --surface-bg: #1e293b;
+            --card-bg: #1e293b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --code-bg: #0b0f19;
+            --code-text: #e2e8f0;
             --success: #10b981;
-            --error: #ef4444;
+            --error: #f43f5e;
+            --warning: #f59e0b;
         }
 
         * {
@@ -31,11 +33,13 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             min-height: 100vh;
-            padding: 2rem;
+            padding: 2.5rem 1.5rem;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .main-content {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -44,139 +48,175 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             gap: 1.5rem;
-            background: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
+            background: var(--surface-bg);
+            padding: 1.25rem 1.75rem;
+            border-radius: 16px;
             border: 1px solid var(--border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
         }
 
         .search-wrapper {
             position: relative;
             flex: 1;
-            max-width: 450px;
+            max-width: 480px;
         }
 
         .search-icon {
             position: absolute;
-            left: 1rem;
+            left: 1.25rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
         }
 
         .search-bar {
             width: 100%;
-            padding: 0.65rem 1rem 0.65rem 2.5rem;
+            padding: 0.8rem 1.25rem 0.8rem 3rem;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 0.95rem;
             outline: none;
-            background: #ffffff;
-            transition: all 0.2s;
+            background: var(--code-bg);
+            color: var(--text-main);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-bar::placeholder {
+            color: #64748b;
         }
 
         .search-bar:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
         }
 
         .actions-wrapper {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 1rem;
         }
 
         /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.65rem 1.2rem;
+            gap: 0.6rem;
+            padding: 0.8rem 1.5rem;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-weight: 600;
             font-size: 0.9rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .btn-primary {
             background: var(--primary);
             color: white;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
-        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:hover { 
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
         
         .btn-secondary {
-            background: #f1f5f9;
+            background: #334155;
             color: var(--text-main);
             border: 1px solid var(--border);
         }
-        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-secondary:hover { 
+            background: #475569; 
+        }
 
         .btn-icon {
-            padding: 0.65rem;
-            border-radius: 8px;
-            background: #ffffff;
+            padding: 0.8rem;
+            border-radius: 12px;
+            background: var(--code-bg);
             border: 1px solid var(--border);
             color: var(--text-muted);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
         }
         .btn-icon:hover {
             color: var(--text-main);
-            background: #f1f5f9;
+            background: #334155;
+            border-color: #475569;
         }
 
         /* Grid Layout */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1.25rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
         }
 
         .query-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1rem;
+            border-radius: 16px;
+            padding: 1.5rem;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-            transition: transform 0.15s, box-shadow 0.15s;
+            gap: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .query-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
         .query-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.4);
+            border-color: #475569;
+        }
+
+        .query-card:hover::before {
+            opacity: 1;
         }
 
         .card-header {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.85rem;
         }
 
         .card-icon-container {
-            padding: 0.4rem;
-            background: rgba(79, 70, 229, 0.08);
-            color: var(--primary);
-            border-radius: 6px;
+            padding: 0.6rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .card-title {
-            font-size: 0.95rem;
+            font-size: 1.05rem;
             font-weight: 600;
             color: var(--text-main);
             white-space: nowrap;
@@ -188,23 +228,45 @@
         .query-preview {
             background: var(--code-bg);
             color: var(--code-text);
-            padding: 0.75rem;
-            border-radius: 6px;
+            padding: 1rem;
+            border-radius: 12px;
             font-family: 'Fira Code', Consolas, Monaco, monospace;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             white-space: pre-wrap;
             word-break: break-all;
-            height: 80px; 
+            height: 110px; 
             overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* Custom Scrollbar for Pre blocks */
+        .query-preview::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .query-preview::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .query-preview::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+        .query-preview::-webkit-scrollbar-thumb:hover {
+            background: #475569;
         }
 
         .card-footer {
             display: flex;
             justify-content: flex-end;
-            gap: 0.4rem;
+            gap: 0.6rem;
             border-top: 1px solid var(--border);
-            padding-top: 0.5rem;
+            padding-top: 1rem;
             margin-top: auto;
+        }
+
+        .card-footer .btn-icon {
+            padding: 0.55rem;
+            border-radius: 8px;
         }
 
         /* Modal Layout */
@@ -214,14 +276,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.25s ease;
             z-index: 100;
         }
 
@@ -231,14 +293,15 @@
         }
 
         .modal-container {
-            background: #ffffff;
+            background: var(--surface-bg);
             width: 100%;
-            max-width: 500px;
-            border-radius: 12px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            max-width: 550px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             transform: scale(0.95);
-            transition: transform 0.2s ease;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
             overflow: hidden;
+            border: 1px solid var(--border);
         }
 
         .modal-overlay.active .modal-container {
@@ -246,7 +309,7 @@
         }
 
         .modal-header {
-            padding: 1rem 1.25rem;
+            padding: 1.5rem 1.75rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -254,79 +317,86 @@
         }
 
         .modal-body {
-            padding: 1.25rem;
+            padding: 1.75rem;
         }
 
         .modal-footer {
-            padding: 0.75rem 1.25rem;
-            background: #f8fafc;
+            padding: 1.25rem 1.75rem;
+            background: #131c2e;
             border-top: 1px solid var(--border);
             display: flex;
             justify-content: flex-end;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
         }
 
         .form-group label {
             display: block;
             font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 0.4rem;
-            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .form-control {
             width: 100%;
-            padding: 0.65rem;
+            padding: 0.8rem 1rem;
+            background: var(--code-bg);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.9rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
             outline: none;
+            color: var(--text-main);
+            transition: all 0.2s;
         }
 
         .form-control:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
 
         textarea.form-control {
-            min-height: 140px;
+            min-height: 160px;
             resize: vertical;
-            font-family: monospace;
-            background: #f8fafc;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
         }
 
         .no-data {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 3rem 1.5rem;
+            padding: 5rem 2rem;
             color: var(--text-muted);
-            background: white;
+            background: var(--surface-bg);
             border: 2px dashed var(--border);
-            border-radius: 10px;
+            border-radius: 20px;
         }
 
         /* Toast Popup Alerts */
         .toast {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: #0f172a;
+            bottom: 2.5rem;
+            right: 2.5rem;
+            background: #1e293b;
             color: white;
-            padding: 0.75rem 1.25rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
+            padding: 1rem 1.5rem;
+            border-radius: 14px;
+            font-size: 0.9rem;
             font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 0.65rem;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+            gap: 0.85rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
             transform: translateY(100px);
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 1000;
+            border: 1px solid var(--border);
         }
 
         .toast.show {
@@ -336,6 +406,14 @@
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .spinning { animation: spin 1s linear infinite; }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .top-bar { flex-direction: column; align-items: stretch; gap: 1rem; padding: 1rem; }
+            .search-wrapper { max-width: 100%; }
+            .actions-wrapper { justify-content: flex-end; }
+            .toast { left: 1rem; right: 1rem; bottom: 1rem; }
+        }
     </style>
 </head>
 <body>
@@ -344,14 +422,14 @@
         <div class="top-bar">
             <div class="search-wrapper">
                 <i data-lucide="search" class="search-icon"></i>
-                <input type="text" id="searchBar" class="search-bar" placeholder="Search saved items..." oninput="filterQueries()">
+                <input type="text" id="searchBar" class="search-bar" placeholder="Search saved queries..." oninput="filterQueries()">
             </div>
             <div class="actions-wrapper">
                 <button class="btn btn-primary" onclick="openModal()">
-                    <i data-lucide="plus" style="width:16px;height:16px;"></i> Add New Query
+                    <i data-lucide="plus" style="width:18px;height:18px;"></i> Add New Query
                 </button>
                 <button class="btn-icon" title="GitHub Sync Settings" onclick="openSettingsModal()">
-                    <i data-lucide="settings" style="width:18px;height:18px;"></i>
+                    <i data-lucide="settings" style="width:20px;height:20px;"></i>
                 </button>
             </div>
         </div>
@@ -363,9 +441,9 @@
     <div id="modalOverlay" class="modal-overlay" onclick="closeModalOnOverlay(event, 'modalOverlay')">
         <div class="modal-container">
             <div class="modal-header">
-                <h3 id="modalTitle" style="font-size: 1.1rem; font-weight: 600;">Add New Query</h3>
+                <h3 id="modalTitle" style="font-size: 1.25rem; font-weight: 600;">Add New Query</h3>
                 <button class="btn-icon" style="border:none; background:transparent; cursor:pointer;" onclick="closeModal('modalOverlay')">
-                    <i data-lucide="x" style="width:18px;height:18px;"></i>
+                    <i data-lucide="x" style="width:20px;height:20px;"></i>
                 </button>
             </div>
             <form id="queryForm" onsubmit="handleFormSubmit(event)">
@@ -392,9 +470,9 @@
     <div id="settingsOverlay" class="modal-overlay" onclick="closeModalOnOverlay(event, 'settingsOverlay')">
         <div class="modal-container">
             <div class="modal-header">
-                <h3 style="font-size: 1.1rem; font-weight: 600;">GitHub Integration Settings</h3>
+                <h3 style="font-size: 1.25rem; font-weight: 600;">GitHub Integration Settings</h3>
                 <button class="btn-icon" style="border:none; background:transparent; cursor:pointer;" onclick="closeModal('settingsOverlay')">
-                    <i data-lucide="x" style="width:18px;height:18px;"></i>
+                    <i data-lucide="x" style="width:20px;height:20px;"></i>
                 </button>
             </div>
             <form id="settingsForm" onsubmit="saveSettings(event)">
@@ -426,7 +504,7 @@
 
     <!-- Dynamic Alert Toast System -->
     <div id="toast" class="toast">
-        <span id="toastIconSlot"><i data-lucide="loader" class="spinning" style="width:16px;height:16px;color:#3b82f6;"></i></span>
+        <span id="toastIconSlot"><i data-lucide="loader" class="spinning" style="width:18px;height:18px;color:#6366f1;"></i></span>
         <span id="toastMessage">Fetching database...</span>
     </div>
 
@@ -452,7 +530,7 @@
     // Load elements on initialization
     window.addEventListener('DOMContentLoaded', () => {
         renderDashboard([]);
-        showStatusToast("loader", "Fetching database from GitHub...", "#3b82f6", true);
+        showStatusToast("loader", "Fetching database from GitHub...", "#6366f1", true);
         autoFetchCSV();
     });
 
@@ -470,7 +548,7 @@
             showStatusToast("check-circle", `Synced! Loaded ${queries.length} queries.`, "#10b981", false, 2500);
             filterQueries();
         } catch (err) {
-            showStatusToast("alert-circle", `Could not read "${csvFileName}". Verify file is in your repository.`, "#ef4444", false, 5000);
+            showStatusToast("alert-circle", `Could not read "${csvFileName}". Verify file is in your repository.`, "#f43f5e", false, 5000);
         }
     }
 
@@ -484,11 +562,11 @@
         const branch = localStorage.getItem('gh_branch') || 'main';
 
         if (!token || !owner || !repo) {
-            showStatusToast("settings", "Please configure GitHub Settings (Gear Icon) to allow auto-saving.", "#eab308", false, 6000);
+            showStatusToast("settings", "Please configure GitHub Settings (Gear Icon) to allow auto-saving.", "#f59e0b", false, 6000);
             return false;
         }
 
-        showStatusToast("loader", "Committing updates directly to GitHub repo...", "#3b82f6", true);
+        showStatusToast("loader", "Committing updates directly to GitHub repo...", "#6366f1", true);
 
         try {
             // 1. Get current SHA hash identifier of the existing file (Required by GitHub API to update files)
@@ -532,7 +610,7 @@
             showStatusToast("check-circle", "Changes committed and saved to GitHub successfully!", "#10b981", false, 3000);
             return true;
         } catch (err) {
-            showStatusToast("alert-circle", "Sync failed! Check your token settings or repository permissions.", "#ef4444", false, 5000);
+            showStatusToast("alert-circle", "Sync failed! Check your token settings or repository permissions.", "#f43f5e", false, 5000);
             return false;
         }
     }
@@ -608,7 +686,7 @@
        UI INTERFACES AND VIEWPORTS
        ========================================================================== */
     function showStatusToast(icon, message, color, isSpinning = false, timeout = 0) {
-        toastIconSlot.innerHTML = `<i data-lucide="${icon}" class="${isSpinning ? 'spinning' : ''}" style="width:16px;height:16px;color:${color};"></i>`;
+        toastIconSlot.innerHTML = `<i data-lucide="${icon}" class="${isSpinning ? 'spinning' : ''}" style="width:18px;height:18px;color:${color};"></i>`;
         toastMessage.innerText = message;
         lucide.createIcons();
         toast.classList.add('show');
@@ -647,7 +725,7 @@
         if (dataset.length === 0) {
             dashboardGrid.innerHTML = `
                 <div class="no-data">
-                    <i data-lucide="folder-open" style="width:32px; height:32px; margin-bottom:0.75rem; color:var(--text-muted);"></i>
+                    <i data-lucide="folder-open" style="width:40px; height:40px; margin-bottom:1rem; color:var(--text-muted);"></i>
                     <p>No queries found. Verify "${csvFileName}" is committed directly alongside this file inside your repository.</p>
                 </div>`;
             lucide.createIcons();
@@ -660,19 +738,19 @@
             card.className = 'query-card';
             card.innerHTML = `
                 <div class="card-header">
-                    <div class="card-icon-container"><i data-lucide="${iconName}" style="width:16px; height:16px;"></i></div>
+                    <div class="card-icon-container"><i data-lucide="${iconName}" style="width:18px; height:18px;"></i></div>
                     <div class="card-title" title="${escapeHTML(q.heading)}">${escapeHTML(q.heading)}</div>
                 </div>
                 <pre class="query-preview"><code>${escapeHTML(q.text)}</code></pre>
                 <div class="card-footer">
-                    <button class="btn-icon" style="padding:0.4rem;border-radius:6px;" title="Copy Content" onclick="copySnippet(\`${escapeJS(q.text)}\`)">
-                        <i data-lucide="copy" style="width:14px; height:14px;"></i>
+                    <button class="btn-icon" title="Copy Content" onclick="copySnippet(\`${escapeJS(q.text)}\`)">
+                        <i data-lucide="copy" style="width:16px; height:16px;"></i>
                     </button>
-                    <button class="btn-icon" style="padding:0.4rem;border-radius:6px;" title="Modify Item" onclick="setupEditForm(${q.id})">
-                        <i data-lucide="edit-3" style="width:14px; height:14px;"></i>
+                    <button class="btn-icon" title="Modify Item" onclick="setupEditForm(${q.id})">
+                        <i data-lucide="edit-3" style="width:16px; height:16px;"></i>
                     </button>
-                    <button class="btn-icon" style="padding:0.4rem;border-radius:6px;" title="Delete Permanent" onclick="destroyQuery(${q.id})">
-                        <i data-lucide="trash" style="width:14px; height:14px;"></i>
+                    <button class="btn-icon" title="Delete Permanent" onclick="destroyQuery(${q.id})">
+                        <i data-lucide="trash" style="width:16px; height:16px;"></i>
                     </button>
                 </div>`;
             dashboardGrid.appendChild(card);
@@ -696,7 +774,7 @@
         queryHeadingInput.value = item.heading;
         queryTextInput.value = item.text;
         modalTitle.innerText = "Edit Query Settings";
-        saveBtn.innerText = "Update changes";
+        saveBtn.innerText = "Update Changes";
         openModal(true);
     }
 
@@ -741,6 +819,12 @@
             text: r[textIdx] || ''
         }));
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    });
 
     function escapeHTML(str) {
         return str.replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[m]));
