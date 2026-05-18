@@ -1,1 +1,4 @@
 Heading,Query,ID
+"CRF Details","select * from aml_internal.tbl_crft_mst t where t.crf_id=2057;
+select * from aml_internal.tbl_crft_dev_ta_dtls t where t.crf_id=2057;
+select t.*, t.rowid from aml_internal.TBL_CRFT_testing_TA_DTLS t where t.crf_id=2057;",1779088409841
