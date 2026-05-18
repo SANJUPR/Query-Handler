@@ -85,6 +85,12 @@
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
+        .actions-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
         /* Buttons */
         .btn {
             display: inline-flex;
@@ -114,9 +120,9 @@
         .btn-secondary:hover { background: #e2e8f0; }
 
         .btn-icon {
-            padding: 0.4rem;
-            border-radius: 6px;
-            background: #f8fafc;
+            padding: 0.65rem;
+            border-radius: 8px;
+            background: #ffffff;
             border: 1px solid var(--border);
             color: var(--text-muted);
             cursor: pointer;
@@ -340,20 +346,25 @@
                 <i data-lucide="search" class="search-icon"></i>
                 <input type="text" id="searchBar" class="search-bar" placeholder="Search saved items..." oninput="filterQueries()">
             </div>
-            <button class="btn btn-primary" onclick="openModal()">
-                <i data-lucide="plus" style="width:16px;height:16px;"></i> Add New Query
-            </button>
+            <div class="actions-wrapper">
+                <button class="btn btn-primary" onclick="openModal()">
+                    <i data-lucide="plus" style="width:16px;height:16px;"></i> Add New Query
+                </button>
+                <button class="btn-icon" title="GitHub Sync Settings" onclick="openSettingsModal()">
+                    <i data-lucide="settings" style="width:18px;height:18px;"></i>
+                </button>
+            </div>
         </div>
 
         <div id="dashboardGrid" class="dashboard-grid"></div>
     </main>
 
-    <!-- Modal Form Overlay -->
-    <div id="modalOverlay" class="modal-overlay" onclick="closeModalOnOverlay(event)">
+    <!-- Modal Form Overlay (Add/Edit) -->
+    <div id="modalOverlay" class="modal-overlay" onclick="closeModalOnOverlay(event, 'modalOverlay')">
         <div class="modal-container">
             <div class="modal-header">
                 <h3 id="modalTitle" style="font-size: 1.1rem; font-weight: 600;">Add New Query</h3>
-                <button class="btn-icon" style="border:none; background:transparent; cursor:pointer;" onclick="closeModal()">
+                <button class="btn-icon" style="border:none; background:transparent; cursor:pointer;" onclick="closeModal('modalOverlay')">
                     <i data-lucide="x" style="width:18px;height:18px;"></i>
                 </button>
             </div>
@@ -366,12 +377,48 @@
                     </div>
                     <div class="form-group">
                         <label for="queryText">Query Description / Code Snippet</label>
-                        <textarea id="queryText" class="form-control" placeholder="SELECT * FROM users WHERE status = 'active'..." required></textarea>
+                        <textarea id="queryText" class="form-control" placeholder="SELECT * FROM users..." required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalOverlay')">Cancel</button>
                     <button type="submit" id="saveBtn" class="btn btn-primary">Save Query</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal Overlay -->
+    <div id="settingsOverlay" class="modal-overlay" onclick="closeModalOnOverlay(event, 'settingsOverlay')">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 style="font-size: 1.1rem; font-weight: 600;">GitHub Integration Settings</h3>
+                <button class="btn-icon" style="border:none; background:transparent; cursor:pointer;" onclick="closeModal('settingsOverlay')">
+                    <i data-lucide="x" style="width:18px;height:18px;"></i>
+                </button>
+            </div>
+            <form id="settingsForm" onsubmit="saveSettings(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="ghToken">GitHub Personal Access Token (PAT)</label>
+                        <input type="password" id="ghToken" class="form-control" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ghOwner">GitHub Username / Owner</label>
+                        <input type="text" id="ghOwner" class="form-control" placeholder="e.g., sanju-developer" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ghRepo">Repository Name</label>
+                        <input type="text" id="ghRepo" class="form-control" placeholder="e.g., query-vault" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ghBranch">Branch Name</label>
+                        <input type="text" id="ghBranch" class="form-control" value="main" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('settingsOverlay')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
                 </div>
             </form>
         </div>
@@ -385,12 +432,12 @@
 
 <script>
     let queries = [];
-    let fileHandle = null;
     const csvFileName = "QueryDB.csv"; 
 
     // DOM Bindings
     const dashboardGrid = document.getElementById('dashboardGrid');
     const modalOverlay = document.getElementById('modalOverlay');
+    const settingsOverlay = document.getElementById('settingsOverlay');
     const queryForm = document.getElementById('queryForm');
     const queryIdInput = document.getElementById('queryId');
     const queryHeadingInput = document.getElementById('queryHeading');
@@ -402,7 +449,7 @@
     const toastMessage = document.getElementById('toastMessage');
     const toastIconSlot = document.getElementById('toastIconSlot');
 
-    // Run automatically on page load
+    // Load elements on initialization
     window.addEventListener('DOMContentLoaded', () => {
         renderDashboard([]);
         showStatusToast("loader", "Fetching database from GitHub...", "#3b82f6", true);
@@ -410,7 +457,7 @@
     });
 
     /* ==========================================================================
-       AUTOMATIC SILENT FETCH ON LOAD
+       AUTOMATIC READ FETCH FROM REPO
        ========================================================================== */
     async function autoFetchCSV() {
         try {
@@ -423,31 +470,40 @@
             showStatusToast("check-circle", `Synced! Loaded ${queries.length} queries.`, "#10b981", false, 2500);
             filterQueries();
         } catch (err) {
-            showStatusToast("alert-circle", `Could not auto-fetch "${csvFileName}" from GitHub.`, "#ef4444", false, 4000);
+            showStatusToast("alert-circle", `Could not read "${csvFileName}". Verify file is in your repository.`, "#ef4444", false, 5000);
         }
     }
 
     /* ==========================================================================
-       SILENT IN-PLACE FILE OVERWRITE MANAGEMENT
+       SILENT DIRECT COMMITS VIA GITHUB API
        ========================================================================== */
-    async function saveChangesToFile() {
-        // If we don't have a file handle linked yet for this session, ask them to point to it once
-        if (!fileHandle) {
-            alert(`To save updates directly to your file without downloading a new one, please select your local "${csvFileName}" file in the next prompt.`);
-            try {
-                const [handle] = await window.showOpenFilePicker({
-                    types: [{ description: 'CSV Database File', accept: { 'text/csv': ['.csv'] } }],
-                    multiple: false
-                });
-                fileHandle = handle;
-            } catch (e) {
-                showStatusToast("alert-circle", "Save cancelled. File handle rejected.", "#ef4444", false, 3000);
-                return false;
-            }
+    async function saveChangesToGitHub() {
+        const token = localStorage.getItem('gh_token');
+        const owner = localStorage.getItem('gh_owner');
+        const repo = localStorage.getItem('gh_repo');
+        const branch = localStorage.getItem('gh_branch') || 'main';
+
+        if (!token || !owner || !repo) {
+            showStatusToast("settings", "Please configure GitHub Settings (Gear Icon) to allow auto-saving.", "#eab308", false, 6000);
+            return false;
         }
 
+        showStatusToast("loader", "Committing updates directly to GitHub repo...", "#3b82f6", true);
+
         try {
-            // Build the updated CSV data structure text string
+            // 1. Get current SHA hash identifier of the existing file (Required by GitHub API to update files)
+            const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${csvFileName}?ref=${branch}`;
+            const getRes = await fetch(fileUrl, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+
+            let sha = "";
+            if (getRes.ok) {
+                const fileData = await getRes.json();
+                sha = fileData.sha;
+            }
+
+            // 2. Generate clean CSV string mapping structure
             let csvContent = "Heading,Query,ID\r\n";
             queries.forEach(q => {
                 let headingEscaped = '"' + q.heading.replace(/"/g, '""') + '"';
@@ -455,21 +511,34 @@
                 csvContent += headingEscaped + "," + textEscaped + "," + q.id + "\r\n";
             });
 
-            // Stream directly into the existing file on your computer disk
-            const writable = await fileHandle.createWritable();
-            await writable.write(csvContent);
-            await writable.close();
-            
-            showStatusToast("check-circle", `File updated directly! Ready to push to GitHub.`, "#10b981", false, 3000);
+            // 3. Send PUT request payload to push modification directly back to your repository branch
+            const putRes = await fetch(fileUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    message: "Dashboard automatic database updates [skip ci]",
+                    content: btoa(unescape(encodeURIComponent(csvContent))), // Base64 handling for special characters
+                    sha: sha || undefined,
+                    branch: branch
+                })
+            });
+
+            if (!putRes.ok) throw new Error("GitHub rejected the push write action");
+
+            showStatusToast("check-circle", "Changes committed and saved to GitHub successfully!", "#10b981", false, 3000);
             return true;
         } catch (err) {
-            showStatusToast("alert-circle", "Error saving! Make sure the file isn't open in Excel.", "#ef4444", false, 4000);
+            showStatusToast("alert-circle", "Sync failed! Check your token settings or repository permissions.", "#ef4444", false, 5000);
             return false;
         }
     }
 
     /* ==========================================================================
-       DASHBOARD CONTROLLER ACTIONS
+       DASHBOARD ACTION INTERFACES
        ========================================================================== */
     async function handleFormSubmit(e) {
         e.preventDefault();
@@ -477,7 +546,6 @@
         const heading = queryHeadingInput.value.trim();
         const text = queryTextInput.value.trim();
 
-        // Backup current layout to revert in case the write fails
         const originalQueries = [...queries];
 
         if (id) {
@@ -487,33 +555,57 @@
             queries.unshift(item);
         }
 
-        closeModal();
+        closeModal('modalOverlay');
         
-        // Save silently directly to the file without downloading
-        const success = await saveChangesToFile();
+        const success = await saveChangesToGitHub();
         if (success) {
-            filterQueries(); // Update layout seamlessly 
+            filterQueries(); 
         } else {
-            queries = originalQueries; // Revert if cancelled/failed
+            queries = originalQueries; // Revert locally if push failed
+            filterQueries();
         }
     }
 
     async function destroyQuery(id) {
-        if (confirm("Delete this query permanently from your file?")) {
+        if (confirm("Delete this query permanently from your GitHub repository file?")) {
             const originalQueries = [...queries];
             queries = queries.filter(q => q.id !== id);
             
-            const success = await saveChangesToFile();
+            const success = await saveChangesToGitHub();
             if (success) {
                 filterQueries();
             } else {
                 queries = originalQueries;
+                filterQueries();
             }
         }
     }
 
     /* ==========================================================================
-       UI VIEWPORT RENDERING & NOTIFICATIONS
+       SETTINGS MANAGEMENT LAYERS
+       ========================================================================== */
+    function openSettingsModal() {
+        document.getElementById('ghToken').value = localStorage.getItem('gh_token') || '';
+        document.getElementById('ghOwner').value = localStorage.getItem('gh_owner') || '';
+        document.getElementById('ghRepo').value = localStorage.getItem('gh_repo') || '';
+        document.getElementById('ghBranch').value = localStorage.getItem('gh_branch') || 'main';
+        settingsOverlay.classList.add('active');
+    }
+
+    function saveSettings(e) {
+        e.preventDefault();
+        localStorage.setItem('gh_token', document.getElementById('ghToken').value.trim());
+        localStorage.setItem('gh_owner', document.getElementById('ghOwner').value.trim());
+        localStorage.setItem('gh_repo', document.getElementById('ghRepo').value.trim());
+        localStorage.setItem('gh_branch', document.getElementById('ghBranch').value.trim());
+        
+        closeModal('settingsOverlay');
+        showStatusToast("check-circle", "GitHub parameters updated!", "#10b981", false, 2500);
+        autoFetchCSV(); // Re-fetch testing authorization endpoints
+    }
+
+    /* ==========================================================================
+       UI INTERFACES AND VIEWPORTS
        ========================================================================== */
     function showStatusToast(icon, message, color, isSpinning = false, timeout = 0) {
         toastIconSlot.innerHTML = `<i data-lucide="${icon}" class="${isSpinning ? 'spinning' : ''}" style="width:16px;height:16px;color:${color};"></i>`;
@@ -547,8 +639,8 @@
         modalOverlay.classList.add('active');
     }
 
-    function closeModal() { modalOverlay.classList.remove('active'); }
-    function closeModalOnOverlay(e) { if (e.target === modalOverlay) closeModal(); }
+    function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+    function closeModalOnOverlay(e, modalId) { if (e.target === document.getElementById(modalId)) closeModal(modalId); }
 
     function renderDashboard(dataset) {
         dashboardGrid.innerHTML = '';
@@ -556,7 +648,7 @@
             dashboardGrid.innerHTML = `
                 <div class="no-data">
                     <i data-lucide="folder-open" style="width:32px; height:32px; margin-bottom:0.75rem; color:var(--text-muted);"></i>
-                    <p>No queries found. Verify "${csvFileName}" is committed right alongside this index file inside your repository.</p>
+                    <p>No queries found. Verify "${csvFileName}" is committed directly alongside this file inside your repository.</p>
                 </div>`;
             lucide.createIcons();
             return;
@@ -573,13 +665,13 @@
                 </div>
                 <pre class="query-preview"><code>${escapeHTML(q.text)}</code></pre>
                 <div class="card-footer">
-                    <button class="btn-icon" title="Copy Content" onclick="copySnippet(\`${escapeJS(q.text)}\`)">
+                    <button class="btn-icon" style="padding:0.4rem;border-radius:6px;" title="Copy Content" onclick="copySnippet(\`${escapeJS(q.text)}\`)">
                         <i data-lucide="copy" style="width:14px; height:14px;"></i>
                     </button>
-                    <button class="btn-icon" title="Modify Item" onclick="setupEditForm(${q.id})">
+                    <button class="btn-icon" style="padding:0.4rem;border-radius:6px;" title="Modify Item" onclick="setupEditForm(${q.id})">
                         <i data-lucide="edit-3" style="width:14px; height:14px;"></i>
                     </button>
-                    <button class="btn-icon" title="Delete Permanent" onclick="destroyQuery(${q.id})">
+                    <button class="btn-icon" style="padding:0.4rem;border-radius:6px;" title="Delete Permanent" onclick="destroyQuery(${q.id})">
                         <i data-lucide="trash" style="width:14px; height:14px;"></i>
                     </button>
                 </div>`;
