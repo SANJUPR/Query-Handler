@@ -1,5 +1,4 @@
 Heading,Query,ID
-"qwe","qw",1779085406910
 "Add tester","insert into aml_internal.tbl_crft_team_dtls (TEAM_ID, EMP_CODE, CATEGORY, JOB_DESC, STATUS_ID)
 values (6, 380421, '1', '2', '1');--1row
 
