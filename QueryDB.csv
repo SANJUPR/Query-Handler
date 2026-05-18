@@ -1,4 +1,12 @@
 Heading,Query,ID
+"CRFT Menu For CRFT DTL","Insert into AML_INTERNAL.TBL_CRFT_ROLE_DTL
+  (ROLE_DT_ID, ROLE_ID, EMPCODE, STATUS_ID)
+  (select SEQ_CRF_ROLE_DT_ID.NEXTVAL, t.menu_id, 338019, 1
+     from AML_INTERNAL.TBL_CRFT_SUB_MENU_MST t
+    where t.menu_id in (5, 9, 18)
+      and t.menu_id not in (select t.role_id
+                              from AML_INTERNAL.TBL_CRFT_ROLE_DTL T
+                             where t.empcode = 338019)); --- For Add menu to Developer Tech Leads",1779088689847
 "Add Developer in CRFT","Insert into AML_INTERNAL.TBL_CRFT_ROLE_DTL
   (ROLE_DT_ID, ROLE_ID, EMPCODE, STATUS_ID)
   (select SEQ_CRF_ROLE_DT_ID.NEXTVAL, t.menu_id, 338019, 1
