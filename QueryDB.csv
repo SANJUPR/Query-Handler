@@ -1,4 +1,8 @@
 Heading,Query,ID
+"Change Requester in STM","update aml_internal.tbl_stm_role_dtl t
+   set t.empcode = 331681
+ where t.dep_id = 51
+   and t.empcode = 362414;--1row",1779095359301
 "CRFT Menu For CRFT TTL","Insert into AML_INTERNAL.TBL_CRFT_ROLE_DTL
   (ROLE_DT_ID, ROLE_ID, EMPCODE, STATUS_ID)
   (select SEQ_CRF_ROLE_DT_ID.NEXTVAL, t.menu_id, 338019, 1
