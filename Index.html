@@ -101,6 +101,26 @@
             gap: 1rem;
         }
 
+        /* Dedicated Top Right Loader Style */
+        .sync-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.85rem;
+            border-radius: 10px;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            opacity: 0;
+            transition: opacity 0.3s ease, border-color 0.3s ease;
+        }
+
+        .sync-status-indicator.visible {
+            opacity: 1;
+        }
+
         /* Buttons */
         .btn {
             display: inline-flex;
@@ -245,7 +265,7 @@
             border: 1px solid rgba(255, 255, 255, 0.03);
         }
 
-        /* Custom Scrollbar for Pre blocks */
+        /* Custom Scrollbar */
         .query-preview::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -425,7 +445,7 @@
             body { padding: 1rem; }
             .top-bar { flex-direction: column; align-items: stretch; gap: 1rem; padding: 1rem; }
             .search-wrapper { max-width: 100%; }
-            .actions-wrapper { justify-content: flex-end; }
+            .actions-wrapper { justify-content: flex-end; width: 100%; }
             .dashboard-grid { grid-template-columns: 1fr; }
             .toast { left: 1rem; right: 1rem; bottom: 1rem; }
         }
@@ -440,6 +460,12 @@
                 <input type="text" id="searchBar" class="search-bar" placeholder="Search saved queries..." oninput="filterQueries()">
             </div>
             <div class="actions-wrapper">
+                <!-- Live Top-Right Background Status Loader Container -->
+                <div id="syncStatus" class="sync-status-indicator">
+                    <span id="syncIcon"><i data-lucide="loader" class="spinning" style="width:14px;height:14px;color:var(--primary);"></i></span>
+                    <span id="syncText">Syncing...</span>
+                </div>
+
                 <button class="btn btn-primary" onclick="openModal()">
                     <i data-lucide="plus" style="width:18px;height:18px;"></i> Add New Query
                 </button>
@@ -498,7 +524,7 @@
                     </div>
                     <div class="form-group">
                         <label for="ghOwner">GitHub Username / Owner</label>
-                        <input type="text" id="ghOwner" class="form-control" placeholder="e.g., sanju-developer" required>
+                        <input type="text" id="ghOwner" class="form-control" placeholder="e.g., username" required>
                     </div>
                     <div class="form-group">
                         <label for="ghRepo">Repository Name</label>
@@ -541,6 +567,11 @@
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
     const toastIconSlot = document.getElementById('toastIconSlot');
+    
+    // Header Loader Elements
+    const syncStatus = document.getElementById('syncStatus');
+    const syncIcon = document.getElementById('syncIcon');
+    const syncText = document.getElementById('syncText');
 
     // Load elements on initialization
     window.addEventListener('DOMContentLoaded', () => {
@@ -548,6 +579,30 @@
         showStatusToast("loader", "Fetching database from GitHub...", "#6366f1", true);
         autoFetchCSV();
     });
+
+    /* ==========================================================================
+       TOP RIGHT LOADER UPDATE UTILITY
+       ========================================================================== */
+    function setTopLoaderState(state, text) {
+        syncStatus.classList.add('visible');
+        syncText.innerText = text;
+        
+        if (state === 'syncing') {
+            syncStatus.style.borderColor = 'var(--border)';
+            syncIcon.innerHTML = `<i data-lucide="loader" class="spinning" style="width:14px;height:14px;color:var(--primary);"></i>`;
+        } else if (state === 'success') {
+            syncStatus.style.borderColor = 'var(--success)';
+            syncIcon.innerHTML = `<i data-lucide="check" style="width:14px;height:14px;color:var(--success);"></i>`;
+            // Automatically hide after completion summary display
+            setTimeout(() => {
+                syncStatus.classList.remove('visible');
+            }, 3500);
+        } else if (state === 'error') {
+            syncStatus.style.borderColor = 'var(--error)';
+            syncIcon.innerHTML = `<i data-lucide="alert-triangle" style="width:14px;height:14px;color:var(--error);"></i>`;
+        }
+        lucide.createIcons();
+    }
 
     /* ==========================================================================
        AUTOMATIC READ FETCH FROM REPO
@@ -578,11 +633,12 @@
 
         if (!token || !owner || !repo) {
             showStatusToast("settings", "Configure GitHub Settings to enable cloud auto-saving.", "#f59e0b", false, 6000);
+            setTopLoaderState('error', 'Configuration Missing');
             return false;
         }
 
-        // Notification showing background processing has started
-        showStatusToast("loader", "Recent change accepted! Committing progress to GitHub background...", "#6366f1", true);
+        // Trigger top right syncing loader status
+        setTopLoaderState('syncing', 'Syncing to GitHub...');
 
         try {
             const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${csvFileName}?ref=${branch}`;
@@ -620,10 +676,12 @@
 
             if (!putRes.ok) throw new Error("GitHub push failed");
 
-            showStatusToast("check-circle", "GitHub cloud repository successfully updated!", "#10b981", false, 3000);
+            // Successful commit completion logic updates loader UI
+            setTopLoaderState('success', 'Synced with Cloud');
             return true;
         } catch (err) {
-            showStatusToast("alert-circle", "Background sync failed! Check token or file permissions.", "#f43f5e", false, 5000);
+            setTopLoaderState('error', 'Sync Failed');
+            showStatusToast("alert-circle", "Background sync failed! Check token parameters.", "#f43f5e", false, 4000);
             return false;
         }
     }
@@ -639,7 +697,7 @@
 
         const originalQueries = [...queries];
 
-        // 1. Instant local state updates
+        // 1. Instant local screen updates
         if (id) {
             queries = queries.map(q => q.id === parseInt(id) ? { ...q, heading, text } : q);
         } else {
@@ -648,12 +706,12 @@
         }
 
         closeModal('modalOverlay');
-        filterQueries(); // Renders change immediately on dashboard layout
+        filterQueries(); 
         
-        // 2. Trigger asynchronous commit task behind scenes
+        // 2. Trigger async background commit payload
         const success = await saveChangesToGitHub();
         if (!success) {
-            queries = originalQueries; // Rolling back locally if write error triggers
+            queries = originalQueries; // Revert locally if commit reports failures
             filterQueries();
         }
     }
@@ -662,11 +720,11 @@
         if (confirm("Delete this query permanently from your GitHub repository file?")) {
             const originalQueries = [...queries];
             
-            // 1. Instantly clear locally
+            // 1. Instantly clear layout item
             queries = queries.filter(q => q.id !== id);
             filterQueries();
             
-            // 2. Trigger asynchronous background removal
+            // 2. Clear remote cloud entry in background
             const success = await saveChangesToGitHub();
             if (!success) {
                 queries = originalQueries;
