@@ -1,4 +1,5 @@
 Heading,Query,ID
+"qwe","qw",1779085406910
 "Add tester","insert into aml_internal.tbl_crft_team_dtls (TEAM_ID, EMP_CODE, CATEGORY, JOB_DESC, STATUS_ID)
 values (6, 380421, '1', '2', '1');--1row
 
@@ -10,4 +11,3 @@ Insert into AML_INTERNAL.TBL_CRFT_ROLE_DTL
       and t.menu_id not in (select t.role_id
                               from AML_INTERNAL.TBL_CRFT_ROLE_DTL T
                              where t.empcode = 380421)); --- For Add menu to Testers",1779083199508
-
