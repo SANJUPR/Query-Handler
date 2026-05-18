@@ -101,26 +101,6 @@
             gap: 1rem;
         }
 
-        /* Dedicated Top Right Loader Style */
-        .sync-status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0.85rem;
-            border-radius: 10px;
-            background: var(--code-bg);
-            border: 1px solid var(--border);
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            opacity: 0;
-            transition: opacity 0.3s ease, border-color 0.3s ease;
-        }
-
-        .sync-status-indicator.visible {
-            opacity: 1;
-        }
-
         /* Buttons */
         .btn {
             display: inline-flex;
@@ -135,27 +115,26 @@
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .btn-primary {
             background: var(--primary);
             color: white;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
-        .btn-primary:hover { 
+        .btn-primary:hover:not(:disabled) { 
             background: var(--primary-hover);
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
-        }
-        .btn-primary:active {
-            transform: translateY(0);
         }
         
         .btn-secondary {
             background: #334155;
             color: var(--text-main);
             border: 1px solid var(--border);
-        }
-        .btn-secondary:hover { 
-            background: #475569; 
         }
 
         .btn-icon {
@@ -176,7 +155,7 @@
             border-color: #475569;
         }
 
-        /* Grid Layout - Optimized for 5 columns on large screens */
+        /* Grid Layout */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -265,7 +244,6 @@
             border: 1px solid rgba(255, 255, 255, 0.03);
         }
 
-        /* Custom Scrollbar */
         .query-preview::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -276,9 +254,6 @@
         .query-preview::-webkit-scrollbar-thumb {
             background: #334155;
             border-radius: 10px;
-        }
-        .query-preview::-webkit-scrollbar-thumb:hover {
-            background: #475569;
         }
 
         .card-footer {
@@ -460,12 +435,6 @@
                 <input type="text" id="searchBar" class="search-bar" placeholder="Search saved queries..." oninput="filterQueries()">
             </div>
             <div class="actions-wrapper">
-                <!-- Live Top-Right Background Status Loader Container -->
-                <div id="syncStatus" class="sync-status-indicator">
-                    <span id="syncIcon"><i data-lucide="loader" class="spinning" style="width:14px;height:14px;color:var(--primary);"></i></span>
-                    <span id="syncText">Syncing...</span>
-                </div>
-
                 <button class="btn btn-primary" onclick="openModal()">
                     <i data-lucide="plus" style="width:18px;height:18px;"></i> Add New Query
                 </button>
@@ -483,7 +452,7 @@
         <div class="modal-container">
             <div class="modal-header">
                 <h3 id="modalTitle" style="font-size: 1.25rem; font-weight: 600;">Add New Query</h3>
-                <button class="btn-icon" style="border:none; background:transparent; cursor:pointer;" onclick="closeModal('modalOverlay')">
+                <button id="closeModalBtn" class="btn-icon" style="border:none; background:transparent; cursor:pointer;" onclick="closeModal('modalOverlay')">
                     <i data-lucide="x" style="width:20px;height:20px;"></i>
                 </button>
             </div>
@@ -500,7 +469,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalOverlay')">Cancel</button>
+                    <button type="button" id="cancelModalBtn" class="btn btn-secondary" onclick="closeModal('modalOverlay')">Cancel</button>
                     <button type="submit" id="saveBtn" class="btn btn-primary">Save Query</button>
                 </div>
             </form>
@@ -552,6 +521,7 @@
 <script>
     let queries = [];
     const csvFileName = "QueryDB.csv"; 
+    let isSubmitting = false;
 
     // DOM Bindings
     const dashboardGrid = document.getElementById('dashboardGrid');
@@ -563,17 +533,13 @@
     const queryTextInput = document.getElementById('queryText');
     const modalTitle = document.getElementById('modalTitle');
     const saveBtn = document.getElementById('saveBtn');
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
     const searchBar = document.getElementById('searchBar');
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
     const toastIconSlot = document.getElementById('toastIconSlot');
-    
-    // Header Loader Elements
-    const syncStatus = document.getElementById('syncStatus');
-    const syncIcon = document.getElementById('syncIcon');
-    const syncText = document.getElementById('syncText');
 
-    // Load elements on initialization
     window.addEventListener('DOMContentLoaded', () => {
         renderDashboard([]);
         showStatusToast("loader", "Fetching database from GitHub...", "#6366f1", true);
@@ -581,49 +547,50 @@
     });
 
     /* ==========================================================================
-       TOP RIGHT LOADER UPDATE UTILITY
-       ========================================================================== */
-    function setTopLoaderState(state, text) {
-        syncStatus.classList.add('visible');
-        syncText.innerText = text;
-        
-        if (state === 'syncing') {
-            syncStatus.style.borderColor = 'var(--border)';
-            syncIcon.innerHTML = `<i data-lucide="loader" class="spinning" style="width:14px;height:14px;color:var(--primary);"></i>`;
-        } else if (state === 'success') {
-            syncStatus.style.borderColor = 'var(--success)';
-            syncIcon.innerHTML = `<i data-lucide="check" style="width:14px;height:14px;color:var(--success);"></i>`;
-            // Automatically hide after completion summary display
-            setTimeout(() => {
-                syncStatus.classList.remove('visible');
-            }, 3500);
-        } else if (state === 'error') {
-            syncStatus.style.borderColor = 'var(--error)';
-            syncIcon.innerHTML = `<i data-lucide="alert-triangle" style="width:14px;height:14px;color:var(--error);"></i>`;
-        }
-        lucide.createIcons();
-    }
-
-    /* ==========================================================================
-       AUTOMATIC READ FETCH FROM REPO
+       AUTOMATIC READ FETCH FROM REPO WITH LOCAL CACHE RECOVERY
        ========================================================================== */
     async function autoFetchCSV() {
         try {
+            // Check if we have an un-built fallback cache locally from a recent write action
+            const localFallback = localStorage.getItem('qv_local_backup');
+            
             const response = await fetch(`./${csvFileName}?t=${Date.now()}`); 
             if (!response.ok) throw new Error("Missing File");
             
             const text = await response.text();
-            queries = parseCSV(text);
+            const cloudQueries = parseCSV(text);
+
+            if (localFallback) {
+                // If local storage exists, check if cloud catchup finally matched it
+                const fallbackParsed = JSON.parse(localFallback);
+                if (cloudQueries.length >= fallbackParsed.length) {
+                    // Cloud build caught up! Safe to flush local storage
+                    localStorage.removeItem('qv_local_backup');
+                    queries = cloudQueries;
+                } else {
+                    // Cloud is still assembling build pages pipeline, default to persistent local changes
+                    queries = fallbackParsed;
+                }
+            } else {
+                queries = cloudQueries;
+            }
             
             showStatusToast("check-circle", `Synced! Loaded ${queries.length} queries.`, "#10b981", false, 2500);
             filterQueries();
         } catch (err) {
-            showStatusToast("alert-circle", `Could not read "${csvFileName}". Verify file is in your repository.`, "#f43f5e", false, 5000);
+            const localFallback = localStorage.getItem('qv_local_backup');
+            if (localFallback) {
+                queries = JSON.parse(localFallback);
+                filterQueries();
+                showStatusToast("check-circle", "Loaded recent workspace modifications from local storage.", "#10b981", false, 3000);
+            } else {
+                showStatusToast("alert-circle", `Could not read "${csvFileName}". Verify file configuration setup.`, "#f43f5e", false, 5000);
+            }
         }
     }
 
     /* ==========================================================================
-       SILENT DIRECT COMMITS VIA GITHUB API
+       SYNCHRONOUS COMPLETE STREAM WRITING
        ========================================================================== */
     async function saveChangesToGitHub() {
         const token = localStorage.getItem('gh_token');
@@ -632,13 +599,9 @@
         const branch = localStorage.getItem('gh_branch') || 'main';
 
         if (!token || !owner || !repo) {
-            showStatusToast("settings", "Configure GitHub Settings to enable cloud auto-saving.", "#f59e0b", false, 6000);
-            setTopLoaderState('error', 'Configuration Missing');
+            showStatusToast("settings", "Configure GitHub Settings to allow write commits.", "#f59e0b", false, 6000);
             return false;
         }
-
-        // Trigger top right syncing loader status
-        setTopLoaderState('syncing', 'Syncing to GitHub...');
 
         try {
             const fileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${csvFileName}?ref=${branch}`;
@@ -667,37 +630,44 @@
                     'Accept': 'application/vnd.github.v3+json'
                 },
                 body: JSON.stringify({
-                    message: "Dashboard automatic database updates [skip ci]",
+                    message: "Dashboard manual code commit [skip ci]",
                     content: btoa(unescape(encodeURIComponent(csvContent))), 
                     sha: sha || undefined,
                     branch: branch
                 })
             });
 
-            if (!putRes.ok) throw new Error("GitHub push failed");
+            if (!putRes.ok) throw new Error("GitHub rejected connection write");
 
-            // Successful commit completion logic updates loader UI
-            setTopLoaderState('success', 'Synced with Cloud');
+            // Save state copies to Local Storage so page refresh shows it immediately
+            localStorage.setItem('qv_local_backup', JSON.stringify(queries));
             return true;
         } catch (err) {
-            setTopLoaderState('error', 'Sync Failed');
-            showStatusToast("alert-circle", "Background sync failed! Check token parameters.", "#f43f5e", false, 4000);
+            showStatusToast("alert-circle", "Commit failure encountered inside remote directory structures.", "#f43f5e", false, 5000);
             return false;
         }
     }
 
     /* ==========================================================================
-       DASHBOARD ACTION INTERFACES
+       DASHBOARD FORM CAPTURE CONTROLS
        ========================================================================== */
     async function handleFormSubmit(e) {
         e.preventDefault();
+        if (isSubmitting) return;
+
         const id = queryIdInput.value;
         const heading = queryHeadingInput.value.trim();
         const text = queryTextInput.value.trim();
-
         const originalQueries = [...queries];
 
-        // 1. Instant local screen updates
+        // Enter loading block layout configuration state
+        isSubmitting = true;
+        saveBtn.disabled = true;
+        cancelModalBtn.disabled = true;
+        closeModalBtn.disabled = true;
+        saveBtn.innerHTML = `<i data-lucide="loader" class="spinning" style="width:16px;height:16px;"></i> Publishing live...`;
+        lucide.createIcons();
+
         if (id) {
             queries = queries.map(q => q.id === parseInt(id) ? { ...q, heading, text } : q);
         } else {
@@ -705,28 +675,42 @@
             queries.unshift(item);
         }
 
-        closeModal('modalOverlay');
-        filterQueries(); 
-        
-        // 2. Trigger async background commit payload
+        // Wait completely for GitHub API file acceptance configuration confirmation response
         const success = await saveChangesToGitHub();
-        if (!success) {
-            queries = originalQueries; // Revert locally if commit reports failures
+
+        // Release submission interface blocks
+        isSubmitting = false;
+        saveBtn.disabled = false;
+        cancelModalBtn.disabled = false;
+        closeModalBtn.disabled = false;
+        saveBtn.innerText = "Save Query";
+
+        if (success) {
+            closeModal('modalOverlay');
+            filterQueries();
+            showStatusToast("check-circle", "Publish complete! Verified and safe across page reloads.", "#10b981", false, 4000);
+        } else {
+            queries = originalQueries; // Rollback array maps if API fails
             filterQueries();
         }
     }
 
     async function destroyQuery(id) {
+        if (isSubmitting) return;
         if (confirm("Delete this query permanently from your GitHub repository file?")) {
             const originalQueries = [...queries];
-            
-            // 1. Instantly clear layout item
             queries = queries.filter(q => q.id !== id);
-            filterQueries();
             
-            // 2. Clear remote cloud entry in background
+            showStatusToast("loader", "Processing removal configuration commands...", "#6366f1", true);
+            isSubmitting = true;
+
             const success = await saveChangesToGitHub();
-            if (!success) {
+            isSubmitting = false;
+
+            if (success) {
+                filterQueries();
+                showStatusToast("check-circle", "Query successfully removed from remote file database structures.", "#10b981", false, 4000);
+            } else {
                 queries = originalQueries;
                 filterQueries();
             }
@@ -734,9 +718,10 @@
     }
 
     /* ==========================================================================
-       SETTINGS MANAGEMENT LAYERS
+       SETTINGS & GENERAL UTILITIES
        ========================================================================== */
     function openSettingsModal() {
+        if (isSubmitting) return;
         document.getElementById('ghToken').value = localStorage.getItem('gh_token') || '';
         document.getElementById('ghOwner').value = localStorage.getItem('gh_owner') || '';
         document.getElementById('ghRepo').value = localStorage.getItem('gh_repo') || '';
@@ -756,9 +741,6 @@
         autoFetchCSV(); 
     }
 
-    /* ==========================================================================
-       UI INTERFACES AND VIEWPORTS
-       ========================================================================== */
     function showStatusToast(icon, message, color, isSpinning = false, timeout = 0) {
         toastIconSlot.innerHTML = `<i data-lucide="${icon}" class="${isSpinning ? 'spinning' : ''}" style="width:18px;height:18px;color:${color};"></i>`;
         toastMessage.innerText = message;
@@ -782,6 +764,7 @@
     }
 
     function openModal(isEdit = false) {
+        if (isSubmitting) return;
         if (!isEdit) {
             queryForm.reset();
             queryIdInput.value = '';
@@ -791,8 +774,15 @@
         modalOverlay.classList.add('active');
     }
 
-    function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
-    function closeModalOnOverlay(e, modalId) { if (e.target === document.getElementById(modalId)) closeModal(modalId); }
+    function closeModal(modalId) { 
+        if (isSubmitting) return;
+        document.getElementById(modalId).classList.remove('active'); 
+    }
+    
+    function closeModalOnOverlay(e, modalId) { 
+        if (isSubmitting) return;
+        if (e.target === document.getElementById(modalId)) closeModal(modalId); 
+    }
 
     function renderDashboard(dataset) {
         dashboardGrid.innerHTML = '';
@@ -800,7 +790,7 @@
             dashboardGrid.innerHTML = `
                 <div class="no-data">
                     <i data-lucide="folder-open" style="width:40px; height:40px; margin-bottom:1rem; color:var(--text-muted);"></i>
-                    <p>No queries found. Verify "${csvFileName}" is committed directly alongside this file inside your repository.</p>
+                    <p>No queries found. Verify your file configurations inside your repository assets.</p>
                 </div>`;
             lucide.createIcons();
             return;
@@ -842,6 +832,7 @@
     }
 
     function setupEditForm(id) {
+        if (isSubmitting) return;
         const item = queries.find(q => q.id === id);
         if (!item) return;
         queryIdInput.value = item.id;
@@ -893,12 +884,6 @@
             text: r[textIdx] || ''
         }));
     }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        if (window.lucide) {
-            window.lucide.createIcons();
-        }
-    });
 
     function escapeHTML(str) {
         return str.replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[m]));
