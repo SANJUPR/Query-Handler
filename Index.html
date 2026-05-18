@@ -16,6 +16,8 @@
             --border: #e2e8f0;
             --code-bg: #1e1e2e;
             --code-text: #cdd6f4;
+            --success: #10b981;
+            --error: #ef4444;
         }
 
         * {
@@ -383,6 +385,7 @@
 
 <script>
     let queries = [];
+    let fileHandle = null;
     const csvFileName = "QueryDB.csv"; 
 
     // DOM Bindings
@@ -399,52 +402,83 @@
     const toastMessage = document.getElementById('toastMessage');
     const toastIconSlot = document.getElementById('toastIconSlot');
 
-    // Run completely automatically on page load
+    // Run automatically on page load
     window.addEventListener('DOMContentLoaded', () => {
         renderDashboard([]);
-        // Show initial loading popup state immediately
-        toast.classList.add('show');
+        showStatusToast("loader", "Fetching database from GitHub...", "#3b82f6", true);
         autoFetchCSV();
     });
 
     /* ==========================================================================
-       SILENT AUTO-FETCH STREAM PIPELINE
+       AUTOMATIC SILENT FETCH ON LOAD
        ========================================================================== */
     async function autoFetchCSV() {
         try {
-            const response = await fetch(`./${csvFileName}?t=${Date.now()}`); // Cache-busting timestamp
-            
+            const response = await fetch(`./${csvFileName}?t=${Date.now()}`); 
             if (!response.ok) throw new Error("Missing File");
             
             const text = await response.text();
             queries = parseCSV(text);
             
-            // Switch loader icon to a success checkmark in the popup
-            toastIconSlot.innerHTML = `<i data-lucide="check-circle" style="width:16px;height:16px;color:#10b981;"></i>`;
-            toastMessage.innerText = `Synced! Parsed ${queries.length} queries.`;
-            lucide.createIcons();
-            
+            showStatusToast("check-circle", `Synced! Loaded ${queries.length} queries.`, "#10b981", false, 2500);
             filterQueries();
-            
-            // Hide the startup popup after 2.5 seconds
-            setTimeout(() => toast.classList.remove('show'), 2500);
         } catch (err) {
-            // Switch loader icon to error icon if something fails
-            toastIconSlot.innerHTML = `<i data-lucide="alert-circle" style="width:16px;height:16px;color:#ef4444;"></i>`;
-            toastMessage.innerText = `Could not load "${csvFileName}" file.`;
-            lucide.createIcons();
-            setTimeout(() => toast.classList.remove('show'), 4000);
+            showStatusToast("alert-circle", `Could not auto-fetch "${csvFileName}" from GitHub.`, "#ef4444", false, 4000);
+        }
+    }
+
+    /* ==========================================================================
+       SILENT IN-PLACE FILE OVERWRITE MANAGEMENT
+       ========================================================================== */
+    async function saveChangesToFile() {
+        // If we don't have a file handle linked yet for this session, ask them to point to it once
+        if (!fileHandle) {
+            alert(`To save updates directly to your file without downloading a new one, please select your local "${csvFileName}" file in the next prompt.`);
+            try {
+                const [handle] = await window.showOpenFilePicker({
+                    types: [{ description: 'CSV Database File', accept: { 'text/csv': ['.csv'] } }],
+                    multiple: false
+                });
+                fileHandle = handle;
+            } catch (e) {
+                showStatusToast("alert-circle", "Save cancelled. File handle rejected.", "#ef4444", false, 3000);
+                return false;
+            }
+        }
+
+        try {
+            // Build the updated CSV data structure text string
+            let csvContent = "Heading,Query,ID\r\n";
+            queries.forEach(q => {
+                let headingEscaped = '"' + q.heading.replace(/"/g, '""') + '"';
+                let textEscaped = '"' + q.text.replace(/"/g, '""') + '"';
+                csvContent += headingEscaped + "," + textEscaped + "," + q.id + "\r\n";
+            });
+
+            // Stream directly into the existing file on your computer disk
+            const writable = await fileHandle.createWritable();
+            await writable.write(csvContent);
+            await writable.close();
+            
+            showStatusToast("check-circle", `File updated directly! Ready to push to GitHub.`, "#10b981", false, 3000);
+            return true;
+        } catch (err) {
+            showStatusToast("alert-circle", "Error saving! Make sure the file isn't open in Excel.", "#ef4444", false, 4000);
+            return false;
         }
     }
 
     /* ==========================================================================
        DASHBOARD CONTROLLER ACTIONS
        ========================================================================== */
-    function handleFormSubmit(e) {
+    async function handleFormSubmit(e) {
         e.preventDefault();
         const id = queryIdInput.value;
         const heading = queryHeadingInput.value.trim();
         const text = queryTextInput.value.trim();
+
+        // Backup current layout to revert in case the write fails
+        const originalQueries = [...queries];
 
         if (id) {
             queries = queries.map(q => q.id === parseInt(id) ? { ...q, heading, text } : q);
@@ -454,45 +488,44 @@
         }
 
         closeModal();
-        filterQueries();
-        triggerDownloadSequence("Data Modified!");
-    }
-
-    function destroyQuery(id) {
-        if (confirm("Remove item from dashboard lookups?")) {
-            queries = queries.filter(q => q.id !== id);
-            filterQueries();
-            triggerDownloadSequence("Item Deleted!");
+        
+        // Save silently directly to the file without downloading
+        const success = await saveChangesToFile();
+        if (success) {
+            filterQueries(); // Update layout seamlessly 
+        } else {
+            queries = originalQueries; // Revert if cancelled/failed
         }
     }
 
-    function triggerDownloadSequence(headline) {
-        let csvContent = "Heading,Query,ID\r\n";
-        queries.forEach(q => {
-            let headingEscaped = '"' + q.heading.replace(/"/g, '""') + '"';
-            let textEscaped = '"' + q.text.replace(/"/g, '""') + '"';
-            csvContent += headingEscaped + "," + textEscaped + "," + q.id + "\r\n";
-        });
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", csvFileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // Show updating action toast notifications
-        toastIconSlot.innerHTML = `<i data-lucide="check-circle" style="width:16px;height:16px;color:#10b981;"></i>`;
-        toastMessage.innerText = `${headline} Downloaded fresh Excel copy to replace local file.`;
-        lucide.createIcons();
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 4000);
+    async function destroyQuery(id) {
+        if (confirm("Delete this query permanently from your file?")) {
+            const originalQueries = [...queries];
+            queries = queries.filter(q => q.id !== id);
+            
+            const success = await saveChangesToFile();
+            if (success) {
+                filterQueries();
+            } else {
+                queries = originalQueries;
+            }
+        }
     }
 
     /* ==========================================================================
-       DASHBOARD COMPONENT RENDERING ENGINE
+       UI VIEWPORT RENDERING & NOTIFICATIONS
        ========================================================================== */
+    function showStatusToast(icon, message, color, isSpinning = false, timeout = 0) {
+        toastIconSlot.innerHTML = `<i data-lucide="${icon}" class="${isSpinning ? 'spinning' : ''}" style="width:16px;height:16px;color:${color};"></i>`;
+        toastMessage.innerText = message;
+        lucide.createIcons();
+        toast.classList.add('show');
+        
+        if (timeout > 0) {
+            setTimeout(() => toast.classList.remove('show'), timeout);
+        }
+    }
+
     function getContextIcon(title) {
         const text = title.toLowerCase();
         if (text.includes('user') || text.includes('customer') || text.includes('profile')) return 'users';
@@ -523,7 +556,7 @@
             dashboardGrid.innerHTML = `
                 <div class="no-data">
                     <i data-lucide="folder-open" style="width:32px; height:32px; margin-bottom:0.75rem; color:var(--text-muted);"></i>
-                    <p>No queries to show. Verify "${csvFileName}" is saved directly alongside this index file in your repo folder.</p>
+                    <p>No queries found. Verify "${csvFileName}" is committed right alongside this index file inside your repository.</p>
                 </div>`;
             lucide.createIcons();
             return;
@@ -577,11 +610,7 @@
 
     function copySnippet(val) {
         navigator.clipboard.writeText(val).then(() => {
-            toastIconSlot.innerHTML = `<i data-lucide="copy" style="width:16px;height:16px;color:#10b981;"></i>`;
-            toastMessage.innerText = "Copied code to clipboard!";
-            lucide.createIcons();
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2000);
+            showStatusToast("copy", "Copied to clipboard!", "#10b981", false, 2000);
         });
     }
 
