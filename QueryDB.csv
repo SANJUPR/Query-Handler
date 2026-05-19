@@ -1,4 +1,13 @@
 Heading,Query,ID
+"Update File in CRFT","UPDATE aml_internal.tbl_crft_files t
+SET 
+    t.doc_name = 'IGL Calculation and features Monthly.xlsx',
+    t.doc = (
+        SELECT sub.doc
+        FROM aml_internal.tbl_crft_files sub
+        WHERE sub.crf_id = 2341
+    )
+WHERE t.crf_id = 2330;",1779161819641
 "Change Requester in STM","update aml_internal.tbl_stm_role_dtl t
    set t.empcode = 331681
  where t.dep_id = 51
