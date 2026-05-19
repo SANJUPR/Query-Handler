@@ -1,4 +1,7 @@
 Heading,Query,ID
+"Change Tester in CRFT","update aml_internal.tbl_crft_testing_ta_dtls t
+   set t.tester_assign_to = 380421
+ where t.crf_id = 2068;--1row",1779171391325
 "Update File in CRFT","UPDATE aml_internal.tbl_crft_files t
 SET 
     t.doc_name = 'IGL Calculation and features Monthly.xlsx',
