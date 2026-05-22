@@ -1,4 +1,37 @@
 Heading,Query,ID
+"Issues Find out","SELECT t.temp_cust_id,
+           t.application_id,
+           SUM(t.amount) AS total_amount,
+           TRUNC(t.tra_dt) AS max_tra_dt,
+           l.loan_id AS load_id,
+           l.customer_id,
+           l.customer_name
+      FROM aml_customer.tbl_income_expense_details t
+      JOIN aml_customer.tbl_tmp_customer x
+        ON t.temp_cust_id = x.temp_cust_id
+      JOIN aml_lms.tbl_loan_master l
+        ON x.cust_id = l.customer_id
+       and t.application_id = l.application_id
+     WHERE t.co_applicant_id > 0 and
+           l.loan_status=1
+     GROUP BY t.temp_cust_id,
+              t.application_id,
+              l.loan_id,
+              TRUNC(t.tra_dt),
+              l.customer_id,
+              l.customer_name
+    HAVING SUM(t.amount) > 25000; 
+
+
+
+
+
+select * from aml_lms.tbl_conversion_customers t where t.loan_id='1228UNSL001491';
+
+
+
+
+select t.*, t.rowid from AML_CUSTOMER.TBL_INCOME_EXPENSE_DETAILS t where t.temp_cust_id=2299532",1779441615331
 "Income More that 25000","SELECT t.temp_cust_id,
            t.application_id,
            SUM(t.amount) AS total_amount,
