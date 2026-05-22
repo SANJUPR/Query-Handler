@@ -1,4 +1,25 @@
 Heading,Query,ID
+"Income More that 25000","SELECT t.temp_cust_id,
+           t.application_id,
+           SUM(t.amount) AS total_amount,
+           TRUNC(t.tra_dt) AS max_tra_dt,
+           l.loan_id AS load_id,
+           l.customer_id,
+           l.customer_name
+      FROM aml_customer.tbl_income_expense_details t
+      JOIN aml_customer.tbl_tmp_customer x
+        ON t.temp_cust_id = x.temp_cust_id
+      JOIN aml_lms.tbl_loan_master l
+        ON x.cust_id = l.customer_id
+       and t.application_id = l.application_id
+     WHERE t.co_applicant_id > 0
+     GROUP BY t.temp_cust_id,
+              t.application_id,
+              l.loan_id,
+              TRUNC(t.tra_dt),
+              l.customer_id,
+              l.customer_name
+    HAVING SUM(t.amount) > 25000",1779429402459
 "Change Tester in CRFT","update aml_internal.tbl_crft_testing_ta_dtls t
    set t.tester_assign_to = 380421
  where t.crf_id = 2068;--1row",1779171391325
