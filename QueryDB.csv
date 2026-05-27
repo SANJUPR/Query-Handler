@@ -1,4 +1,8 @@
 Heading,Query,ID
+"LMS Menu Assign","select t.*, t.rowid from tbl_menu_master t where t.menu_id=135;
+select t.*, t.rowid from tbl_role_dtl t where t.form_id = 135;
+select t.*, t.rowid from tbl_role_master t where t.role_id = 556;
+select t.*, t.rowid from tbl_role_assigned t where t.role_id = 556;",1779865925479
 "Team Details In CRFT","select t.team_id,
        m.team_name,
        m.tech_lead,
