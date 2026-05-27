@@ -1,4 +1,17 @@
 Heading,Query,ID
+"Team Details In CRFT","select t.team_id,
+       m.team_name,
+       m.tech_lead,
+       ee.emp_name As Tech_Lead,
+       t.emp_code,
+       e.emp_name
+  from aml_internal.tbl_crft_team_dtls t,
+       aml_hrm.employee_master         e,
+       aml_internal.tbl_crft_team_mst  m,
+       aml_hrm.employee_master         ee
+ where t.emp_code = e.emp_code
+   and m.team_id = t.team_id
+   and ee.emp_code = m.tech_lead;",1779865307202
 "Issues Find out","SELECT t.temp_cust_id,
            t.application_id,
            SUM(t.amount) AS total_amount,
