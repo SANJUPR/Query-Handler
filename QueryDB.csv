@@ -1,4 +1,43 @@
 Heading,Query,ID
+"MPRM Module Docs","PROC_CRFT_LOGIN
+PROC_MPRM_QUERIES
+PROC_MPRM_FILEUPLOAD
+PROC_MPRM_MENU
+
+SEQ_MPRM_ERROR_ID
+SEQ_MPRM_TEMP_VENDOR_ID
+SEQ_MPRM_FILE_ID
+
+
+select t.*, t.rowid from TBL_MPRM_ERROR_DTL t
+
+select t.*, t.rowid from TBL_MPRM_MENU_MST t;
+select t.*, t.rowid from TBL_MPRM_SUB_MENU_MST t;
+select t.*, t.rowid from TBL_MPRM_ROLE_DTL t;
+select t.*, t.rowid from TBL_MPRM_TDS_CATEGORY_MST t;
+select t.*, t.rowid from TBL_MPRM_GST_MASTER t ;
+
+select t.*, t.rowid from TBL_MPRM_TEMP_VENDOR_MST t;
+select t.*, t.rowid from TBL_MPRM_VENDOR_MST t;
+select t.*, t.rowid from TBL_MPRM_FILES t;
+select t.*, t.rowid from TBL_MPRM_BILL_FILES t;
+select t.*, t.rowid from TBL_MPRM_ENTRY_MST t;
+select t.*, t.rowid from TBL_MPRM_ENTRY_DTL t;
+select t.*, t.rowid from TBL_MPRM_CREDIT_NOTE_DTLS t
+select t.*, t.rowid from TBL_MPRM_CREDIT_NOTE_FILES t
+
+select t.*, t.rowid from TBL_MPRM_APPROVED_ENTRY_DTL t;
+
+
+Preproduction link : 
+
+https://amfluat.asirvad.com/MPRM_Module/Login.aspx
+
+Login Credentials : 
+
+vendor Request - 328940, vendor Recommender - 369383,vendor  Approver - 337983
+
+Entry  Request - 337983,Entry Recommender - 369383, EntryApprover - 328940",1780124403693
 "TA Module Docs","PROC_TA_MENU
 PROC_TA_LOGIN
 PROC_TA_FILEUPLOAD
