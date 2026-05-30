@@ -1,4 +1,33 @@
 Heading,Query,ID
+"TA Module Docs","PROC_TA_MENU
+PROC_TA_LOGIN
+PROC_TA_FILEUPLOAD
+PROC_TA_QUERIES
+
+---
+
+SEQ_TA_ERROR_ID
+SEQ_TA_FILE_ID
+SEQ_TA_ID_DUMMY
+SEQ_TA_RQ_ID
+SEQ_TA_SPECIAL_TARID
+
+---
+
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_MENU_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_SUB_MENU_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_ROLE_DTL t;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_ERROR_DTL t;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_TRAVELMODE_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_STATUS_MST t;
+
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_REQUEST_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_REQUEST_DTL t ;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_REQUEST_DTL_HIS t ;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_FILES t;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_TRACK t;
+select t.*, t.rowid from AML_INTERNAL.TBL_TA_SPECIALCASE_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_SPECIAL_TA_FILES t;",1780124349675
 "Late In Check","SELECT t.emp_code,
        e.emp_name,
        t.curr_date,
