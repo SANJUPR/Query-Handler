@@ -23,7 +23,7 @@ Heading,Query,ID
    AND t.emp_code = 328940
    AND t.curr_date IS NOT NULL
    AND t.m_time > '08:29:59'
- ORDER BY t.curr_date, t.m_time;",1780120227145
+ ORDER BY t.curr_date desc, t.m_time;",1780120227145
 "LMS Menu Assign","select t.*, t.rowid from tbl_menu_master t where t.menu_id=135;
 select t.*, t.rowid from tbl_role_dtl t where t.form_id = 135;
 select t.*, t.rowid from tbl_role_master t where t.role_id = 556;
