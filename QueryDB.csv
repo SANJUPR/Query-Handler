@@ -1,4 +1,45 @@
 Heading,Query,ID
+"CRFT Module Docs","PROC_CRFT_LOGIN
+PROC_CRFT_QUERIES
+PROC_CRFT_FILEUPLOAD
+PROC_CRFT_MENU
+PROC_CRFT_DELAY_CALCULATION
+
+SEQ_CRF_FILE_ID
+SEQ_CRF_ID_DUMMY
+SEQ_CRF_ID
+SEQ_CRF_DEV_TA
+SEQ_CRF_TEST_TA
+SEQ_CRF_ROLE_DT_ID
+SEQ_CRF_DWU_ID
+
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_ERROR_DTL t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MENU_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_SUB_MENU_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_ROLE_DTL t;
+
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_TEAM_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_TEAM_DTLS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MODULE_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MAIL_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MAIN_DROP_DOWNS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_SUB_DROP_DOWNS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_STATUS_MST t;
+
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_UPDATION_DTL t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_FILES t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_DEV_TA_DTLS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_TESTING_TA_DTLS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_WORK_LOG t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_LOG_TRACK t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MST_BACKUP t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_DWU_DTL t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_TASK_DTLS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_TEST_CASE_DTLS t;
+
+select t.* , t.rowid from aml_hrm.hrm_earlygoing_appl t where t.emp_code=328940;--For checking make status=1
+select t.* , t.rowid from tbl_asr_movement_mst t where t.emp_code=328940;--For checking make status=5",1780124525825
 "MPRM Module Docs","PROC_CRFT_LOGIN
 PROC_MPRM_QUERIES
 PROC_MPRM_FILEUPLOAD
