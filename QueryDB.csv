@@ -1,4 +1,35 @@
 Heading,Query,ID
+"Store Module Docs","Procedures
+----------
+
+PROC_STM_LOGIN
+PROC_STM_MENU
+PROC_STM_QUERIES
+
+Sequences
+---------
+
+SEQ_STM_ERROR_ID
+SEQ_STM_INDENT_ID
+SEQ_STM_ELEMENT_ID
+SEQ_STM_PRODUCT_ID
+SEQ_STM_ROLE_ID
+SEQ_STM_AUTO_COUNT_ID
+SEQ_STM_TEMP_INDENT_ID
+
+
+Tables
+------
+select t.*, t.rowid from AML_INTERNAL.TBL_STM_MENU_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_STM_SUB_MENU_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_STM_ROLE_DTL t;
+select t.*, t.rowid from AML_INTERNAL.TBL_STM_ERROR_DTL t;
+select t.*, t.rowid from AML_INTERNAL.TBL_STM_STATUS_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_STM_PRODUCT_MST t;
+
+select t.*, t.rowid from AML_INTERNAL.TBL_STM_REQUEST_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_STM_REQUEST_DTLS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_STM_ADMIN_LOG t;",1780124630552
 "CRFT Module Docs","PROC_CRFT_LOGIN
 PROC_CRFT_QUERIES
 PROC_CRFT_FILEUPLOAD
