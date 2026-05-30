@@ -1,4 +1,29 @@
 Heading,Query,ID
+"Late In Check","SELECT t.emp_code,
+       e.emp_name,
+       t.curr_date,
+       t.m_time,
+       t.e_time,
+       TO_CHAR(TRUNC(sysdate) +
+               (NUMTODSINTERVAL(SUBSTR(t.m_time, 1, 2) - 8, 'HOUR') +
+                NUMTODSINTERVAL(SUBSTR(t.m_time, 4, 2) - 30, 'MINUTE') +
+                NUMTODSINTERVAL(SUBSTR(t.m_time, 7, 2), 'SECOND')),
+               'MI:SS') AS late_time_per_row,
+       TO_CHAR(TRUNC(sysdate) +
+               NUMTODSINTERVAL(SUM(((SUBSTR(t.m_time, 1, 2) - 8) * 3600) +
+                                   ((SUBSTR(t.m_time, 4, 2) - 30) * 60) +
+                                   SUBSTR(t.m_time, 7, 2))
+                               OVER(PARTITION BY TRUNC(t.curr_date, 'MM')
+                                    ORDER BY t.curr_date,
+                                    t.m_time),
+                               'SECOND'),
+               'MI:SS') AS cumulative_late_sum
+  FROM AML_USERS.TBL_ATTEND t, aml_hrm.employee_master e
+ WHERE e.emp_code = t.emp_code
+   AND t.emp_code = 328940
+   AND t.curr_date IS NOT NULL
+   AND t.m_time > '08:29:59'
+ ORDER BY t.curr_date, t.m_time;",1780120227145
 "LMS Menu Assign","select t.*, t.rowid from tbl_menu_master t where t.menu_id=135;
 select t.*, t.rowid from tbl_role_dtl t where t.form_id = 135;
 select t.*, t.rowid from tbl_role_master t where t.role_id = 556;
