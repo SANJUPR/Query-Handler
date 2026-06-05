@@ -1,4 +1,104 @@
 Heading,Query,ID
+"Team CRF Details","SELECT t.crf_id AS CRF_ID,
+       TO_CHAR(t.request_dt, 'DD-MM-YYYY') AS REQUESTED_DATE,
+       t.subject AS SUBJECT,
+       e.emp_name AS USER_NAME,
+       d.dep_name AS USER_DEP,
+       s.current_status AS CURRENT_STATUS,
+       eeeee.emp_name AS ITC,
+       TO_CHAR(t.itc_act_dt, 'DD-MM-YYYY') AS ITC_RECOMMENDED_DATE,
+       t.itc_remark AS ITC_REMARK,
+       eeeeee.emp_name AS CRFC,
+       TO_CHAR(t.committee_act_dt, 'DD-MM-YYYY') AS CRFC_RECOMMENDED_DATE,
+       t.committee_remark AS CRFC_REMARK,
+       eeee.emp_name AS HOD,
+       TO_CHAR(t.hod_act_dt, 'DD-MM-YYYY') AS HOD_RECOMMENDED_DATE,
+       t.hod_remark AS HOD_REMARKS,
+       TO_CHAR(t.it_head_act_dt, 'DD-MM-YYYY') AS IT_HEAD_RECOMMENDED_DATE,
+       t.it_head_remark AS IT_HEAD_REMARKS,
+       TO_CHAR(t.deve_ta_comp_dt, 'DD-MM-YYYY') AS DEVELOPMENT_TA_COMPLETED_DATE,
+       TO_CHAR(t.testing_ta_comp_dt, 'DD-MM-YYYY') AS TESTING_TA_COMPLETED_DATE,
+       TO_CHAR(CASE
+                 WHEN t.request_type = 1 THEN
+                  t.a_act_dt
+                 ELSE
+                  t.md_act_dt
+               END,
+               'DD-MM-YYYY') AS MD_APPROVED_DATE,
+       CASE
+         WHEN t.request_type = 1 THEN
+          t.a_remark
+         ELSE
+          t.md_remark
+       END AS MD_REMARKS,
+       te.team_name AS TEAM_NAME,
+       ee.emp_name AS TECH_LEAD,
+       dev.DEVELOPERS,
+       dev.DEVELOPMENT_START_DATE,
+       dev.DEVELOPMENT_END_DATE,
+       dev.DEVELOPMENT_STARTED_DATE,
+       dev.DEVELOPMENT_ENDED_DATE,
+       test.TESTERS,
+       test.TESTING_START_DATE,
+       test.TESTING_END_DATE,
+       test.TESTING_STARTED_DATE,
+       test.TESTING_ENDED_DATE,
+       TO_CHAR(u.uat_verified_dt, 'DD-MM-YYYY') AS USER_VERIFIED_DATE,
+       TO_CHAR(u.cto_approved_dt, 'DD-MM-YYYY') AS RELEASE_NOTE_APPROVED_DATE,
+       TO_CHAR(u.fb_req_dt, 'DD-MM-YYYY') AS FEEDBACK_REQUESTED_DATE,
+       TO_CHAR(u.fb_sub_dt, 'DD-MM-YYYY') AS FEEDBACK_SUBMITTED_DATE,
+       TO_CHAR(u.doc_sub_dt, 'DD-MM-YYYY') AS DOCUMENT_UPLOADED_DATE,
+       TO_CHAR(u.live_and_close_dt, 'DD-MM-YYYY') AS LIVE_AND_CLOSED_DATE,
+       TO_CHAR(test.MAX_TEST_END_DATE + 4, 'DD-MM-YYYY') AS TARGET_DATE,
+       s.status_name AS STATUS,
+       t.description
+  FROM Aml_internal.tbl_crft_mst t
+  LEFT JOIN aml_hrm.employee_master e
+    ON e.emp_code = t.user_id
+  LEFT JOIN aml_hrm.department_mst d
+    ON d.dep_id = t.dep_id
+  LEFT JOIN aml_hrm.department_major dm
+    ON dm.department_id = d.major_dep_id
+  LEFT JOIN aml_hrm.employee_master eeee
+    ON eeee.emp_code = dm.head_id
+  LEFT JOIN aml_hrm.employee_master eeeee
+    ON eeeee.emp_code = t.itc
+  LEFT JOIN aml_hrm.employee_master eeeeee
+    ON eeeeee.emp_code = t.committee
+  LEFT JOIN Aml_internal.tbl_crft_status_mst s
+    ON s.status_id = t.status_id
+  LEFT JOIN Aml_internal.tbl_crft_updation_dtl u
+    ON u.crf_id = t.crf_id
+  LEFT JOIN Aml_internal.tbl_crft_team_mst te
+    ON te.team_id = t.team_id
+  LEFT JOIN aml_hrm.employee_master ee
+    ON ee.emp_code = t.tech_lead
+  LEFT JOIN (SELECT dt.crf_id,
+                    LISTAGG(ee.emp_name, ', ') WITHIN GROUP(ORDER BY dt.dev_assign_to) AS DEVELOPERS,
+                    LISTAGG(TO_CHAR(dt.dev_start_date, 'DD-MM-YYYY'), ', ') WITHIN GROUP(ORDER BY dt.dev_assign_to) AS DEVELOPMENT_START_DATE,
+                    LISTAGG(TO_CHAR(dt.dev_end_date, 'DD-MM-YYYY'), ', ') WITHIN GROUP(ORDER BY dt.dev_assign_to) AS DEVELOPMENT_END_DATE,
+                    LISTAGG(TO_CHAR(dt.started_date, 'DD-MM-YYYY'), ', ') WITHIN GROUP(ORDER BY dt.dev_assign_to) AS DEVELOPMENT_STARTED_DATE,
+                    LISTAGG(TO_CHAR(dt.ended_date, 'DD-MM-YYYY'), ', ') WITHIN GROUP(ORDER BY dt.dev_assign_to) AS DEVELOPMENT_ENDED_DATE
+               FROM Aml_internal.tbl_crft_dev_ta_dtls dt
+               LEFT JOIN aml_hrm.employee_master ee
+                 ON ee.emp_code = dt.dev_assign_to
+              GROUP BY dt.crf_id) dev
+    ON dev.crf_id = t.crf_id
+  LEFT JOIN (SELECT tt.crf_id,
+                    LISTAGG(eee.emp_name, ', ') WITHIN GROUP(ORDER BY tt.tester_assign_to) AS TESTERS,
+                    LISTAGG(TO_CHAR(tt.test_start_date, 'DD-MM-YYYY'), ', ') WITHIN GROUP(ORDER BY tt.tester_assign_to) AS TESTING_START_DATE,
+                    LISTAGG(TO_CHAR(tt.test_end_date, 'DD-MM-YYYY'), ', ') WITHIN GROUP(ORDER BY tt.tester_assign_to) AS TESTING_END_DATE,
+                    LISTAGG(TO_CHAR(tt.started_date, 'DD-MM-YYYY'), ', ') WITHIN GROUP(ORDER BY tt.tester_assign_to) AS TESTING_STARTED_DATE,
+                    LISTAGG(TO_CHAR(tt.ended_date, 'DD-MM-YYYY'), ', ') WITHIN GROUP(ORDER BY tt.tester_assign_to) AS TESTING_ENDED_DATE,
+                    MAX(tt.test_end_date) AS MAX_TEST_END_DATE
+               FROM Aml_internal.tbl_crft_testing_ta_dtls tt
+               LEFT JOIN aml_hrm.employee_master eee
+                 ON eee.emp_code = tt.tester_assign_to
+              GROUP BY tt.crf_id) test
+    ON test.crf_id = t.crf_id
+
+ WHERE te.team_name = 'MFI - OPERATION'
+   AND t.status_id BETWEEN 2 AND 8;",1780634901478
 "Store Module Docs","Procedures
 ----------
 
