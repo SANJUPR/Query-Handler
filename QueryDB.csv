@@ -1,4 +1,111 @@
 Heading,Query,ID
+"Report Checking","select t.state_id stateId, t.state_name stateName
+  from aml_lms.tbl_npa_lrn_dtl t
+ where t.status_id = 1
+   and t.ason_date between '06-jun-2026' and '06-jun-2026'
+ group by t.state_id, t.state_name; --State
+
+select cast(-1 as number(5)) branchID, 'ALL' branchName
+  from dual
+union all
+select distinct cast(t.branch_id as number(5)) branchID,
+                t.branch_name branchName
+  from aml_lms.TBL_NPA_LRN_DTL t
+ where t.state_id = 19
+   and t.status_id = 1
+   and t.ason_date between '06-jun-2026' and '06-jun-2026'; -- Branch
+
+select '- 1' centerId, 'ALL' centerName
+  from dual
+union all
+select a.center_id centerId, a.center_name centerName
+  from aml_lms.tbl_npa_lrn_dtl a, aml_lms.tbl_loan_master b
+ where a.loan_id = b.loan_id
+   and a.cust_id = b.customer_id
+   and to_char(a.due_amount) > 1000
+   and a.ason_date between '06-jun-2026' and '06-jun-2026'
+   and a.state_id = 19
+   and a.status_id = 1
+   and b.loan_status = 1
+ group by a.center_id, a.center_name; --Center
+ 
+
+select (select nvl(LISTAGG(r.Loan_Id || ' _ '), 0)
+          from aml_lms.TBL_NPA_LRN_DTL r
+         where r.cust_id = t.cust_id) as loanId,
+       to_char(t.branch_id) branchId,
+       to_char(t.branch_name) branchName,
+       to_char(t.cust_id) npaCustId,
+       to_char(t.cust_name) npaCustName,
+       to_char(t.state_id) stateId,
+       to_char(t.state_name) stateName,
+       to_char(t.center_id) centerId,
+       to_char(t.center_name) centerName,
+       to_char(sum(t.loan_amount)) npaLoanAmount,
+       to_char(min(t.loan_date), ' DD - MON - YYYY ') loanDate,
+       to_char(t.due_amount) dueAmount,
+       to_char(t.house_name || ',' || t.locality || ',' || t.street || ',' ||
+               t.pin_code) address,
+       to_char(t.ADDRESS) branchAddress,
+       to_char(t.pin_code) pinCode,
+       to_char(nvl(max(t.phone1), ' ')) phone1,
+       to_char(nvl(max(t.phone2), ' ')) phone2,
+       to_char(t.bm_name) bmName,
+       to_char(nvl(t.bm_mob, ' ')) bmMob,
+       to_char(t.am_name) amName,
+       to_char(nvl(t.am_mob, ' ')) amMob,
+       to_char(t.dm_name) dmName,
+       to_char(nvl(t.dm_mob, ' ')) dmMob,
+       to_char(t.ason_date, ' DD - MON - YYYY ') asonDate,
+       to_char(t.due_date, ' DD - MON - YYYY ') dueDate,
+       to_char(t.language_id) languageId,
+       to_char(t.region_name) regionName,
+       to_char(t.division_id) divisionId,
+       to_char(t.division_name) divisionName,
+       to_char(trunc(sysdate)) printDate,
+       to_char(t.serial_number) serialNumber
+  from aml_lms.TBL_NPA_LRN_DTL t, aml_lms.tbl_loan_master s
+ where t.loan_id = s.loan_id
+   and s.loan_status = 1
+   and t.cust_id not in
+       (select member_id
+          from aml_lms.tbl_claim_request c
+         where c.status_id in (0, 1, 2, 3, 4, 5, 6))
+   and t.ason_date between '06-jun-2026' and '06-jun-2026'
+   and t.state_id = 19
+   and t.status_id = 1
+ group by to_char(t.branch_id),
+          to_char(t.branch_name),
+          to_char(t.cust_id),
+          t.cust_id,
+          to_char(t.cust_name),
+          to_char(t.state_id),
+          to_char(t.state_name),
+          to_char(t.center_id),
+          to_char(t.center_name),
+          t.house_name,
+          t.locality,
+          t.street,
+          t.pin_code,
+          to_char(t.ADDRESS),
+          to_char(t.pin_code),
+          to_char(t.bm_name),
+          to_char(nvl(t.bm_mob, ' ')),
+          to_char(t.am_name),
+          to_char(t.due_amount),
+          to_char(nvl(t.am_mob, ' ')),
+          to_char(t.dm_name),
+          to_char(nvl(t.dm_mob, ' ')),
+          to_char(t.ason_date, ' DD - MON - YYYY '),
+          to_char(t.due_date, ' DD - MON - YYYY '),
+          to_char(t.language_id),
+          to_char(t.region_name),
+          to_char(t.division_id),
+          to_char(t.division_name),
+          to_char(trunc(sysdate)),
+          to_char(t.serial_number)
+having to_char(t.due_amount) > 1000
+ order by to_char(t.serial_number);--Centers",1780729600424
 "Team CRF Details","SELECT t.crf_id AS CRF_ID,
        TO_CHAR(t.request_dt, 'DD-MM-YYYY') AS REQUESTED_DATE,
        t.subject AS SUBJECT,
