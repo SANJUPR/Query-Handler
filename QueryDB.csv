@@ -1,5 +1,5 @@
 Heading,Query,ID
-"Report Checking","select t.state_id stateId, t.state_name stateName
+"NPA Report Checking","select t.state_id stateId, t.state_name stateName
   from aml_lms.tbl_npa_lrn_dtl t
  where t.status_id = 1
    and t.ason_date between '06-jun-2026' and '06-jun-2026'
