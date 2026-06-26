@@ -186,7 +186,7 @@ having to_char(t.due_amount) > 1000
                 AND mx.status_id NOT IN (20, 38, 39, 49, 7)) test
     ON test.crf_id = t.crf_id
    AND test.rnum = NVL(dev.rnum, 1)
- WHERE te.team_name = 'MFI - OPERATION';",1780634901478
+ WHERE te.team_name = 'MFI - OPERATION' order by t.crf_id desc;",1780634901478
 "Store Module Docs","Procedures
 ----------
 
