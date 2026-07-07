@@ -109,8 +109,23 @@ having to_char(t.due_amount) > 1000
 "Team CRF Details","SELECT emp.emp_name AS DEVELOPER_NAME,
        TO_CHAR(NVL(dev.max_ended_date, hist.last_closed_dev_end),
                'DD-MM-YYYY') AS DEVELOPER_FREE_FROM,
-       NVL(TO_CHAR(t.crf_id), 'Currently No CRF In-Hand') AS CRF_ID,
-       NVL(t.subject, 'Currently No CRF In-Hand') AS SUBJECT,
+       CASE
+         WHEN t.crf_id IS NULL THEN
+          'Currently No CRF In Hand For ' ||
+          TRUNC(SYSDATE - NVL(dev.max_ended_date, hist.last_closed_dev_end)) ||
+          ' Days'
+         ELSE
+          TO_CHAR(t.crf_id)
+       END AS CRF_ID,
+       CASE
+         WHEN t.subject IS NULL THEN
+          'Currently No CRF In Hand For ' ||
+          TRUNC(SYSDATE - NVL(dev.max_ended_date, hist.last_closed_dev_end)) ||
+          ' Days'
+         ELSE
+          t.subject
+       END AS SUBJECT,
+       
        e.emp_name AS USER_NAME,
        TO_CHAR(dev.dev_start_date, 'DD-MM-YYYY') AS DEVELOPMENT_START_DATE,
        TO_CHAR(dev.dev_end_date, 'DD-MM-YYYY') AS DEVELOPMENT_END_DATE,
@@ -186,7 +201,8 @@ having to_char(t.due_amount) > 1000
                 AND mx.status_id NOT IN (20, 38, 39, 49, 7)) test
     ON test.crf_id = t.crf_id
    AND test.rnum = NVL(dev.rnum, 1)
- WHERE te.team_name = 'MFI - OPERATION' order by t.crf_id desc;",1780634901478
+ WHERE te.team_name = 'MFI - OPERATION'
+ ORDER BY t.crf_id DESC;",1780634901478
 "Store Module Docs","Procedures
 ----------
 
