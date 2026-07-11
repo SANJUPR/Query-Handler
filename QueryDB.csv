@@ -14,7 +14,7 @@ WHERE
         FROM AML_CUSTOMER.TBL_HOUSEHOLD_DETAILS hd
         WHERE hd.application_id = lm.application_id
     );",1783760929937
-"Data Mismatch Checking","select count(*) from tbl_temp_04_2024 t; --109566
+"Data Mismatch Checking- House Hold","select count(*) from tbl_temp_04_2024 t; --109566
 
 select count(*)
   from aml_lms.tbl_loan_master t
@@ -23,26 +23,7 @@ select count(*)
    and t.loan_id like '%UNSL%'; --109566
 
 select a.temp_cust_id, a.cust_id
-  from tbl_temp_04_2024               t,
-       aml_customer.tbl_tmp_customer  a,
-       aml_customer.tbl_co_applicants b
- where t.clientid = a.cust_id
-   and a.temp_cust_id = b.temp_cust_id
-   and b.temp_cust_id <> b.co_applicant_id
-   and t.application_id = b.application_id
- group by a.temp_cust_id, a.cust_id
-having count(*) > 1;
-
-select distinct a.temp_cust_id, a.cust_id
-  from tbl_temp_04_2024                        t,
-       aml_customer.tbl_tmp_customer           a,
-       aml_customer.tbl_income_expense_details b
- where t.clientid = a.cust_id
-   and a.temp_cust_id = b.temp_cust_id
-   and t.application_id = b.application_id;
-
-select a.temp_cust_id, a.cust_id
-  from tbl_temp_04_2024                   t,
+  from tbl_temp_02_2025                   t,
        aml_customer.tbl_tmp_customer      a,
        aml_customer.tbl_household_details b
  where t.clientid = a.cust_id
@@ -51,11 +32,19 @@ select a.temp_cust_id, a.cust_id
 
 select *
   from AML_CUSTOMER.TBL_HOUSEHOLD_DETAILS t
- where t.cust_id = 1004841; --1004835,
+ where t.cust_id = 7202676;
+
 select *
   from AML_CUSTOMER.TBL_TMP_CUSTOMER t
- where t.temp_cust_id = 1004841;
-select * from AML_LMS.TBL_LOAN_MASTER t where t.customer_id = 31261007525;",1783593787991
+ where t.temp_cust_id = 7202676;
+ 
+ select *
+  from AML_CUSTOMER.TBL_TMP_CUSTOMER t
+ where t.cust_id = 31866006004;
+
+select *
+  from AML_LMS.TBL_LOAN_MASTER t
+ where t.customer_id = 31866006004;",1783593787991
 "NPA Report Checking","select t.state_id stateId, t.state_name stateName
   from aml_lms.tbl_npa_lrn_dtl t
  where t.status_id = 1
