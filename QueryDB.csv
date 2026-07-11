@@ -1,4 +1,19 @@
 Heading,Query,ID
+"Loan Master 'Yes', House hold 'No' - Year wise","-- Query to find application_ids in loan master that don't have corresponding entries in household details
+SELECT 
+    lm.loan_id,
+    lm.application_id,
+    lm.customer_id,
+    lm.loan_date
+FROM 
+    AML_LMS.TBL_LOAN_MASTER lm
+WHERE 
+    EXTRACT(YEAR FROM lm.loan_date) = 2026
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM AML_CUSTOMER.TBL_HOUSEHOLD_DETAILS hd
+        WHERE hd.application_id = lm.application_id
+    );",1783760929937
 "Data Mismatch Checking","select count(*) from tbl_temp_04_2024 t; --109566
 
 select count(*)
