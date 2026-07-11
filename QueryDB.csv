@@ -1,4 +1,19 @@
 Heading,Query,ID
+"Loan Mater 'Yes' , Co Applicant 'No' - Year wise","-- Loans in 2025 without co-applicants
+SELECT lm.*
+FROM AML_LMS.TBL_LOAN_MASTER lm
+WHERE lm.loan_date >= DATE '2026-01-01' 
+  AND lm.loan_date < DATE '2027-01-01'
+  --and lm.loan_status in(1,2,3)
+  AND NOT EXISTS (
+    -- Check if this customer has co-applicants
+    SELECT 1
+    FROM AML_CUSTOMER.TBL_TMP_CUSTOMER tc
+    INNER JOIN AML_CUSTOMER.TBL_CO_APPLICANTS ca 
+      ON tc.temp_cust_id = ca.temp_cust_id
+    WHERE tc.cust_id = lm.customer_id
+      AND ca.relationship <> 0
+  );",1783763387129
 "Loan Master 'Yes', House hold 'No' - Year wise","-- Query to find application_ids in loan master that don't have corresponding entries in household details
 SELECT 
     lm.loan_id,
