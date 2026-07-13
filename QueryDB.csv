@@ -1,5 +1,5 @@
 Heading,Query,ID
-"Loan With out Income Data","-- Loans from this year without income details
+"Loan With out Income Data","-- Loans from specific years without income details
 SELECT 
     lm.loan_id,
     lm.customer_id,
@@ -18,7 +18,7 @@ LEFT JOIN
     ON tc.temp_cust_id = ie.temp_cust_id 
     AND ie.type_id = 1  -- Income type
 WHERE 
-    EXTRACT(YEAR FROM lm.loan_date) = EXTRACT(YEAR FROM SYSDATE)  -- Loans from this year
+    EXTRACT(YEAR FROM lm.loan_date) IN (2026)  -- Specify years
     AND ie.temp_cust_id IS NULL;",1783768071207
 "Get Loan Details","select * from AML_LMS.TBL_LOAN_MASTER t where t.loan_id = '1866UNSL003306';
 select * from AML_CUSTOMER.TBL_TMP_CUSTOMER t where t.cust_id = 31866006004;
