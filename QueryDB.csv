@@ -630,6 +630,25 @@ Insert into AML_INTERNAL.TBL_CRFT_ROLE_DTL
 "Employee Details","select * from aml_hrm.employee_master t where t.emp_code=317674;
 select * from aml_hrm.department_mst t where t.dep_id=49;
 select * from aml_hrm.department_major t where t.department_id=26;",1779088428384
-"CRF Details","select * from aml_internal.tbl_crft_mst t where t.crf_id=2057;
-select * from aml_internal.tbl_crft_dev_ta_dtls t where t.crf_id=2057;
-select t.*, t.rowid from aml_internal.TBL_CRFT_testing_TA_DTLS t where t.crf_id=2057;",1779088409841
+"CRF Details","select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_ERROR_DTL t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MENU_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_SUB_MENU_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_ROLE_DTL t;
+
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_TEAM_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_TEAM_DTLS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MODULE_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MAIL_MST t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MAIN_DROP_DOWNS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_SUB_DROP_DOWNS t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_STATUS_MST t;
+
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MST t where t.crf_id=2497;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_UPDATION_DTL t where t.crf_id=2497;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_FILES t where t.crf_id=2497;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_DEV_TA_DTLS t where t.crf_id=2497;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_TESTING_TA_DTLS t where t.crf_id=2497;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_WORK_LOG t where t.crf_id=2497;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_LOG_TRACK t;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MST_BACKUP t where t.crf_id=2497;
+select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_DWU_DTL t;",1779088409841
