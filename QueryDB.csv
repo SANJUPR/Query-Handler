@@ -456,31 +456,58 @@ select t.*, t.rowid from AML_INTERNAL.TBL_TA_FILES t;
 select t.*, t.rowid from AML_INTERNAL.TBL_TA_TRACK t;
 select t.*, t.rowid from AML_INTERNAL.TBL_TA_SPECIALCASE_MST t;
 select t.*, t.rowid from AML_INTERNAL.TBL_SPECIAL_TA_FILES t;",1780124349675
-"Late In Check","SELECT t.emp_code,
+"Late In Check","WITH combined_attendance AS
+ (SELECT emp_code, curr_date, m_time, e_time
+    FROM AML_USERS.TBL_ATTEND
+   WHERE emp_code = 328940
+     AND curr_date IS NOT NULL
+     AND curr_date < TRUNC(SYSDATE)
+  UNION ALL
+  SELECT emp_code, curr_date, m_time, e_time
+    FROM AML_USERS.TBL_DAILY_ATTEND
+   WHERE emp_code = 328940
+     AND curr_date IS NOT NULL
+     AND curr_date >= TRUNC(SYSDATE)),
+calculated_seconds AS
+ (SELECT c.emp_code,
+         c.curr_date,
+         c.m_time,
+         c.e_time,
+         (((TO_NUMBER(SUBSTR(c.m_time, 1, 2)) - 8) * 3600) +
+         ((TO_NUMBER(SUBSTR(c.m_time, 4, 2)) - 30) * 60) +
+         TO_NUMBER(SUBSTR(c.m_time, 7, 2))) AS late_seconds
+    FROM combined_attendance c
+   WHERE c.m_time > '08:30:00'),
+cumulative_data AS
+ (SELECT cs.emp_code,
+         cs.curr_date,
+         cs.m_time,
+         cs.e_time,
+         cs.late_seconds,
+         SUM(cs.late_seconds) OVER(PARTITION BY TRUNC(cs.curr_date, 'MM') ORDER BY cs.curr_date, cs.m_time) AS cumulative_late_sec
+    FROM calculated_seconds cs)
+SELECT cd.emp_code,
        e.emp_name,
-       t.curr_date,
-       t.m_time,
-       t.e_time,
-       TO_CHAR(TRUNC(sysdate) +
-               (NUMTODSINTERVAL(SUBSTR(t.m_time, 1, 2) - 8, 'HOUR') +
-                NUMTODSINTERVAL(SUBSTR(t.m_time, 4, 2) - 30, 'MINUTE') +
-                NUMTODSINTERVAL(SUBSTR(t.m_time, 7, 2), 'SECOND')),
-               'MI:SS') AS late_time_per_row,
-       TO_CHAR(TRUNC(sysdate) +
-               NUMTODSINTERVAL(SUM(((SUBSTR(t.m_time, 1, 2) - 8) * 3600) +
-                                   ((SUBSTR(t.m_time, 4, 2) - 30) * 60) +
-                                   SUBSTR(t.m_time, 7, 2))
-                               OVER(PARTITION BY TRUNC(t.curr_date, 'MM')
-                                    ORDER BY t.curr_date,
-                                    t.m_time),
-                               'SECOND'),
-               'MI:SS') AS cumulative_late_sum
-  FROM AML_USERS.TBL_ATTEND t, aml_hrm.employee_master e
- WHERE e.emp_code = t.emp_code
-   AND t.emp_code = 328940
-   AND t.curr_date IS NOT NULL
-   AND t.m_time > '08:29:59'
- ORDER BY t.curr_date desc, t.m_time;",1780120227145
+       cd.curr_date,
+       cd.m_time,
+       cd.e_time,
+       TO_CHAR(TRUNC(SYSDATE) + NUMTODSINTERVAL(cd.late_seconds, 'SECOND'),
+               'HH24:MI:SS') AS late_time_per_row,
+       TO_CHAR(TRUNC(SYSDATE) +
+               NUMTODSINTERVAL(cd.cumulative_late_sec, 'SECOND'),
+               'HH24:MI:SS') AS cumulative_late_sum,
+       CASE
+         WHEN cd.cumulative_late_sec <= 900 THEN
+          TO_CHAR(TRUNC(SYSDATE) +
+                  NUMTODSINTERVAL(900 - cd.cumulative_late_sec, 'SECOND'),
+                  'HH24:MI:SS')
+         ELSE
+          '00:00:00'
+       END AS balance_grace_time
+  FROM cumulative_data cd
+  JOIN aml_hrm.employee_master e
+    ON e.emp_code = cd.emp_code
+ ORDER BY cd.curr_date DESC, cd.m_time DESC;",1780120227145
 "LMS Menu Assign","select t.*, t.rowid from tbl_menu_master t where t.menu_id=135;
 select t.*, t.rowid from tbl_role_dtl t where t.form_id = 135;
 select t.*, t.rowid from tbl_role_master t where t.role_id = 556;
