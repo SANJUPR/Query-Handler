@@ -1,4 +1,34 @@
 Heading,Query,ID
+"CRF ID - 2503 - Data Checking","SELECT b.state_id,
+       t.branch_id,
+       t.loan_id,
+       TRUNC(t.entered_date) AS loan_date,
+       s.interest_rate AS expected_interest_rate,
+       s.funder_id AS expected_funder_id,
+       t.interest_rate AS actual_interest_rate,
+       t.funder_id AS actual_funder_id,
+       CASE
+         WHEN s.state_id IS NULL THEN
+          'No Scheme Found for State'
+         WHEN NVL(s.interest_rate, -1) != NVL(t.interest_rate, -1) THEN
+          'Mismatch'
+         ELSE
+          'Match'
+       END AS interest_status,
+       CASE
+         WHEN s.state_id IS NULL THEN
+          'No Scheme Found for State'
+         WHEN NVL(s.funder_id, -1) != NVL(t.funder_id, -1) THEN
+          'Mismatch'
+         ELSE
+          'Match'
+       END AS funder_status
+  FROM aml_lms.tbl_loan_master t
+  LEFT JOIN aml_los.tbl_branch_detail b
+    ON t.branch_id = b.branch_id
+  LEFT JOIN AML_LOS.TBL_STATEWISE_LOAN_SCHEME s
+    ON b.state_id = s.state_id
+ WHERE TRUNC(t.entered_date) = TRUNC(SYSDATE);",1784624893439
 "Find, FDO, BM,AM","SELECT b.BRANCH_ID,
        b.BRANCH_NAME,
        b.BRANCH_HEAD AS bm_emp_code,
