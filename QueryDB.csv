@@ -84,8 +84,7 @@ select * from AML_CUSTOMER.TBL_HOUSEHOLD_DETAILS t where t.cust_id = 7202676;",1
 "Loan Mater 'Yes' , Co Applicant 'No' - Year wise","-- Loans in 2025 without co-applicants
 SELECT lm.*
 FROM AML_LMS.TBL_LOAN_MASTER lm
-WHERE lm.loan_date >= DATE '2026-01-01' 
-  AND lm.loan_date < DATE '2027-01-01'
+WHERE EXTRACT(YEAR FROM lm.loan_date) IN (2026)
   --and lm.loan_status in(1,2,3)
   AND NOT EXISTS (
     -- Check if this customer has co-applicants
