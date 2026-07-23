@@ -1,4 +1,8 @@
 Heading,Query,ID
+"CRF ID - 2469 - Data Checking","select count(*) from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t; --Total
+select count(*) from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t where t.old_cust_name is not null;--Old
+select count(*) from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t where t.old_cust_name is null;--New
+select * from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t ;",1784778456630
 "CRF ID - 2503 - Data Checking","SELECT b.state_id,
        t.branch_id,
        t.loan_id,
