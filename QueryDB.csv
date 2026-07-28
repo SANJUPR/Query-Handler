@@ -488,7 +488,17 @@ select t.*, t.rowid from AML_INTERNAL.TBL_TA_REQUEST_DTL_HIS t ;
 select t.*, t.rowid from AML_INTERNAL.TBL_TA_FILES t;
 select t.*, t.rowid from AML_INTERNAL.TBL_TA_TRACK t;
 select t.*, t.rowid from AML_INTERNAL.TBL_TA_SPECIALCASE_MST t;
-select t.*, t.rowid from AML_INTERNAL.TBL_SPECIAL_TA_FILES t;",1780124349675
+select t.*, t.rowid from AML_INTERNAL.TBL_SPECIAL_TA_FILES t;
+
+
+
+
+
+
+
+
+select t.*, t.rowid from TBL_TA_REQUEST_MST_BKP_28072026 t;
+select t.*, t.rowid from TBL_TA_REQUEST_DTL_BKP_28072026 t;",1780124349675
 "Late In Check","WITH combined_attendance AS
  (SELECT emp_code, curr_date, m_time, e_time
     FROM AML_USERS.TBL_ATTEND
