@@ -22,7 +22,17 @@ Heading,Query,ID
           l.customer_id,
           l.customer_name,
           EXTRACT(YEAR FROM l.loan_date)
-HAVING SUM(t.amount) < 10000;--2024(81), 2025(0), 2026(96)--Income < 10000 --2024(2030), 2025(0), 2026(0)",1785992446862
+HAVING SUM(t.amount) < 10000;--2024(81), 2025(0), 2026(96)--Income < 10000 --2024(2030), 2025(0), 2026(0)
+
+
+select t.*, t.rowid
+  from AML_CUSTOMER.TBL_INCOME_EXPENSE_DETAILS t
+ where t.co_applicant_id > 0
+   and t.temp_cust_id = 8979093
+   and t.application_id= 116887794;--Only 1 case is not in the list, Need to change the Income into 25001
+ 
+ select * from aml_lms.tbl_loan_master t where t.loan_id='2658UNSL001939';
+ select * from aml_customer.tbl_tmp_customer t where t.cust_id=32658002630;",1785992446862
 "CRF ID - 2469 - Data Checking","select count(*) from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t; --Total
 select count(*) from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t where t.old_cust_name is not null;--Old
 select count(*) from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t where t.old_cust_name is null;--New
