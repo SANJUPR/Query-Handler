@@ -14,7 +14,7 @@ Heading,Query,ID
    AND t.application_id = l.application_id
  WHERE t.co_applicant_id > 0
    AND l.loan_status = 1
-   AND EXTRACT(YEAR FROM l.loan_date) = 2026
+   AND EXTRACT(YEAR FROM l.loan_date) = 2024
  GROUP BY t.temp_cust_id,
           t.application_id,
           l.loan_id,
@@ -22,7 +22,7 @@ Heading,Query,ID
           l.customer_id,
           l.customer_name,
           EXTRACT(YEAR FROM l.loan_date)
-HAVING SUM(t.amount) > 25000;--2024(81), 2025(0), 2026(96)",1785992446862
+HAVING SUM(t.amount) < 10000;--2024(81), 2025(0), 2026(96)--Income < 10000 --2024(2030), 2025(0), 2026(0)",1785992446862
 "CRF ID - 2469 - Data Checking","select count(*) from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t; --Total
 select count(*) from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t where t.old_cust_name is not null;--Old
 select count(*) from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t where t.old_cust_name is null;--New
