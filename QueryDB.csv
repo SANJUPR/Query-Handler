@@ -694,9 +694,43 @@ Insert into AML_INTERNAL.TBL_CRFT_ROLE_DTL
       and t.menu_id not in (select t.role_id
                               from AML_INTERNAL.TBL_CRFT_ROLE_DTL T
                              where t.empcode = 380421)); --- For Add menu to Testers",1779088487692
-"Employee Details","select * from aml_hrm.employee_master t where t.emp_code=317674;
-select * from aml_hrm.department_mst t where t.dep_id=49;
-select * from aml_hrm.department_major t where t.department_id=26;",1779088428384
+"Employee Details","SELECT e.emp_code || ' ~ ' || e.emp_name AS employee_details,
+       e.status_id || ' ~ ' || e.branch_id AS status_and_branch,
+       e.mobile_no AS mobile_number,
+       CASE
+         WHEN UPPER(pd.sex) = 1 THEN
+          'S/O ' || pd.father_name || ', ' || pd.perm_add1
+         WHEN UPPER(pd.sex) = 0 THEN
+          'D/O ' || pd.father_name || ', ' || pd.perm_add1
+         ELSE
+          'C/O ' || pd.father_name || ', ' || pd.perm_add1
+       END AS full_address_details,
+       pd.birth_date,
+       pd.sex,
+       p.post_id || ' ~ ' || p.post_name AS post_details,
+       d.dep_id || ' ~ ' || d.dep_name AS sub_department_details,
+       d.dep_head || ' ~ ' || e_rec.emp_name AS leave_recommender_details,
+       m.department_id || ' ~ ' || m.department_name AS major_department_details,
+       m.head_id || ' ~ ' || e_head.emp_name AS leave_approver_details,
+       att.m_photo,
+       att.e_photo
+  FROM aml_hrm.employee_master e
+  LEFT JOIN aml_hrm.employ_personal_dtl pd
+    ON e.emp_code = pd.emp_code
+  LEFT JOIN aml_hrm.post_mst p
+    ON e.post_id = p.post_id
+  LEFT JOIN aml_hrm.department_mst d
+    ON e.department_id = d.dep_id
+  LEFT JOIN aml_hrm.department_major m
+    ON d.major_dep_id = m.department_id
+  LEFT JOIN aml_hrm.employee_master e_rec
+    ON d.dep_head = e_rec.emp_code
+  LEFT JOIN aml_hrm.employee_master e_head
+    ON m.head_id = e_head.emp_code
+  LEFT JOIN aml_users.tbl_attend att
+    ON e.emp_code = att.emp_code
+   AND TRUNC(att.curr_date) = TRUNC(SYSDATE - 1)
+ WHERE e.emp_code = 328940;",1779088428384
 "CRF Details","select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_ERROR_DTL t;
 select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_MENU_MST t;
 select t.*, t.rowid from AML_INTERNAL.TBL_CRFT_SUB_MENU_MST t;
