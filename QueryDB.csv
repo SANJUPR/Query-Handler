@@ -1,5 +1,5 @@
 Heading,Query,ID
-"Income > 2500 Year Wise","SELECT t.temp_cust_id,
+"Income > 25000 Year Wise","SELECT t.temp_cust_id,
        t.application_id,
        SUM(t.amount) AS total_amount,
        TRUNC(t.tra_dt) AS max_tra_dt,
