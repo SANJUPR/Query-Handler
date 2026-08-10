@@ -113,12 +113,18 @@ LEFT JOIN
 WHERE 
     EXTRACT(YEAR FROM lm.loan_date) IN (2026)  -- Specify years
     AND ie.temp_cust_id IS NULL;",1783768071207
-"Get Loan Details","select * from AML_LMS.TBL_LOAN_MASTER t where t.loan_id = '1866UNSL003306';
-select * from AML_CUSTOMER.TBL_TMP_CUSTOMER t where t.cust_id = 31866006004;
+"Get Loan Details","select * from AML_LMS.TBL_LOAN_MASTER t where t.loan_id = '1866UNSL004659';
+select * from AML_CUSTOMER.TBL_TMP_CUSTOMER t where t.cust_id = 31866008995;
 
---select * from AML_CUSTOMER.TBL_CO_APPLICANTS t where t.temp_cust_id=10006956;
---select * from AML_CUSTOMER.TBL_INCOME_EXPENSE_DETAILS t where t.temp_cust_id=7202676;
-select * from AML_CUSTOMER.TBL_HOUSEHOLD_DETAILS t where t.cust_id = 7202676;",1783766125605
+select * from AML_CUSTOMER.TBL_CO_APPLICANTS t where t.temp_cust_id=10265850;
+select * from AML_CUSTOMER.TBL_INCOME_EXPENSE_DETAILS t where t.temp_cust_id=10265850;
+select * from AML_CUSTOMER.TBL_HOUSEHOLD_DETAILS t where t.cust_id = 10265850;
+
+select * from AML_LOS.TBL_APPLICATION_MEMBERS t where t.member_id='31866008995';
+select * from AML_LOS.TBL_APPLICATION_MASTER t where t.application_id='128981052';
+select * from AML_LOS.TBL_APPLICATION_STAGES t where t.application_id='128981052';
+select * from AML_LOS.TBL_DROP_MEMBERS t where t.member_id='31866008995';
+select * from AML_CUSTOMER.TBL_BANK_ACCOUNT_REJECTION t where t.member_id='31866008995';",1783766125605
 "Loan Mater 'Yes' , Co Applicant 'No' - Year wise","-- Loans in 2025 without co-applicants
 SELECT lm.*
 FROM AML_LMS.TBL_LOAN_MASTER lm
