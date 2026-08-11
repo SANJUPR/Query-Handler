@@ -40,7 +40,7 @@ select * from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t ;
 
 
 select *
-  from Aml_Customer.Tbl_Customer_Verification_Dtl t
+  from AML_CUSTOMER.TBL_CUSTOMER_VERIFICATION_DTL t
  where t.cust_id is not null
    and t.verification_flag = 1
    and trunc(t.created_date) = trunc(sysdate) --365
