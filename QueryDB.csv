@@ -75,7 +75,20 @@ select *
     ON t.branch_id = b.branch_id
   LEFT JOIN AML_LOS.TBL_STATEWISE_LOAN_SCHEME s
     ON b.state_id = s.state_id
- WHERE TRUNC(t.entered_date) = TRUNC(SYSDATE);",1784624893439
+ WHERE TRUNC(t.entered_date) = TRUNC(SYSDATE);
+
+
+select t.loan_id,
+       t.branch_id,
+       t.application_id,
+       t.loan_date,
+       t.loan_status,
+       t.funder_id,
+       t.interest_rate
+  from aml_lms.tbl_loan_master t, aml_los.tbl_branch_detail b
+ where b.branch_id = t.branch_id
+   and trunc(t.entered_date) = trunc(sysdate)
+   and b.state_id in (23, 24, 26, 38);--Check Funder id and Interest rate",1784624893439
 "Find, FDO, BM,AM","SELECT b.BRANCH_ID,
        b.BRANCH_NAME,
        b.BRANCH_HEAD AS bm_emp_code,
