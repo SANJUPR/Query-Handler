@@ -88,7 +88,7 @@ select t.state_id,
        t.created_date,
        t.removed_by,
        t.removed_date
-  from aml_los.tbl_statewise_loan_scheme t, aml_users.state_master s
+  from aml_los.tbl_statewise_loan_scheme t, aml_hrm.state_master s
  where t.state_id = s.state_id;
  
 select t.loan_id,
