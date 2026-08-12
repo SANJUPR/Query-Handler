@@ -78,6 +78,19 @@ select *
  WHERE TRUNC(t.entered_date) = TRUNC(SYSDATE);
 
 
+select t.state_id,
+       s.state_name,
+       t.funder_id,
+       t.interest_rate,
+       t.status_id,
+       t.remark,
+       t.created_by,
+       t.created_date,
+       t.removed_by,
+       t.removed_date
+  from aml_los.tbl_statewise_loan_scheme t, aml_users.state_master s
+ where t.state_id = s.state_id;
+ 
 select t.loan_id,
        t.branch_id,
        t.application_id,
@@ -88,7 +101,7 @@ select t.loan_id,
   from aml_lms.tbl_loan_master t, aml_los.tbl_branch_detail b
  where b.branch_id = t.branch_id
    and trunc(t.entered_date) = trunc(sysdate)
-   and b.state_id in (23, 24, 26, 38);--Check Funder id and Interest rate",1784624893439
+   and b.state_id in (23, 24, 26, 38) and t.loan_status=9; --Check Funder id and Interest rate",1784624893439
 "Find, FDO, BM,AM","SELECT b.BRANCH_ID,
        b.BRANCH_NAME,
        b.BRANCH_HEAD AS bm_emp_code,
