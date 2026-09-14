@@ -381,7 +381,7 @@ having to_char(t.due_amount) > 1000
                FROM Aml_internal.tbl_crft_dev_ta_dtls dt
               INNER JOIN Aml_internal.tbl_crft_mst mx
                  ON mx.crf_id = dt.crf_id
-                AND mx.status_id NOT IN (20, 38, 39, 49, 7)) dev
+                AND mx.status_id NOT IN (20, 38, 39, 49, 7, 40)) dev
     ON dev.dev_assign_to = emp.emp_code
   LEFT JOIN Aml_internal.tbl_crft_mst t
     ON t.crf_id = dev.crf_id
@@ -416,7 +416,7 @@ having to_char(t.due_amount) > 1000
                  ON eee.emp_code = tt.tester_assign_to
               INNER JOIN Aml_internal.tbl_crft_mst mx
                  ON mx.crf_id = tt.crf_id
-                AND mx.status_id NOT IN (20, 38, 39, 49, 7)) test
+                AND mx.status_id NOT IN (20, 38, 39, 49, 7, 40)) test
     ON test.crf_id = t.crf_id
    AND test.rnum = NVL(dev.rnum, 1)
  WHERE te.team_name = 'MFI - OPERATION'
