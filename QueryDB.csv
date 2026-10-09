@@ -159,7 +159,16 @@ select * from AML_LOS.TBL_APPLICATION_MEMBERS t where t.member_id='31866008995';
 select * from AML_LOS.TBL_APPLICATION_MASTER t where t.application_id='128981052';
 select * from AML_LOS.TBL_APPLICATION_STAGES t where t.application_id='128981052';
 select * from AML_LOS.TBL_DROP_MEMBERS t where t.member_id='31866008995';
-select * from AML_CUSTOMER.TBL_BANK_ACCOUNT_REJECTION t where t.member_id='31866008995';",1783766125605
+select * from AML_CUSTOMER.TBL_BANK_ACCOUNT_REJECTION t where t.member_id='31866008995';
+
+select * from aml_los.tbl_application_master t where t.application_id = 144518055;
+select * from aml_los.tbl_application_master t where t.application_id = 144001933;
+select * from aml_customer.tbl_tmp_customer t where t.temp_cust_id=10427380;
+select * from aml_customer.tbl_household_details t where t.application_id=144518055;
+select * from aml_customer.tbl_household_details t where t.cust_id=10427380;
+select * from aml_customer.tbl_co_applicants t where t.temp_cust_id=10427380;
+select * from aml_los.tbl_drop_members t where t.application_id=144518055;
+select * from aml_los.tbl_dropped_eligible_members t where t.application_id=144518055;",1783766125605
 "Loan Mater 'Yes' , Co Applicant 'No' - Year wise","-- Loans in 2025 without co-applicants
 SELECT lm.*
 FROM AML_LMS.TBL_LOAN_MASTER lm
